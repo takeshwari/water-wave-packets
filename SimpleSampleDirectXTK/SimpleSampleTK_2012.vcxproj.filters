@@ -10,6 +10,7 @@
     <None Include="..\DXUT\Optional\directx.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">
@@ -21,11 +22,13 @@
     <ClInclude Include="Packets.h" />
     <ClInclude Include="GlobalDefs.h" />
     <ClInclude Include="Render.h" />
+    <ClInclude Include="SPHParticles.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WavePacketViewer.cpp" />
     <ClCompile Include="Packets.cpp" />
     <ClCompile Include="Render.cpp" />
+    <ClCompile Include="SPHParticles.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="WavePackets.fx" />

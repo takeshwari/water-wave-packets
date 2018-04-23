@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <Eigen/Dense>
+#include "SPHParticles.h"
 
 using namespace Eigen;
 using namespace std;
@@ -112,6 +113,9 @@ public:
 	int			*m_freeGhost;
 	int			m_freeGhosts;
 
+
+
+
 	// simulation
 	float		m_time;
 	float		m_oldTime;
@@ -122,6 +126,8 @@ public:
 	Packets(int packetBudget);
 	~Packets(void);
 	void Reset();
+	//Particles- Splash 
+	Particles* m_particles;
 	float GetBoundaryDist(Vector2f &p);
 	Vector2f GetBoundaryNormal(Vector2f &p);
 	float GetGroundVal(Vector2f &p);

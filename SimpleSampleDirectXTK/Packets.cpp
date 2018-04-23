@@ -1,4 +1,6 @@
 // Include the OS headers
+#define _USE_MATH_DEFINES
+#include <cmath>
 //-----------------------
 #include <windows.h>
 #include <atlbase.h>
@@ -10,6 +12,8 @@
 #include <fstream>
 #include <math.h>
 #include "Packets.h"
+#include "SPHParticles.h"
+
 #pragma warning( disable: 4996 )
 
 
@@ -700,6 +704,8 @@ bool Packets::AdvectPacketVertex(float elapsedTime, Vector2f &posIn,  Vector2f &
 	// if we ran into a boundary -> step back and bounce off
 	if (GetBoundaryDist(posOut)<0.0f)   
 	{
+		
+
 		Vector2f nor = GetBoundaryNormal(posOut);
 		float a = nor.dot(dirOut);
 		if (a <= -0.08f)  // a wave reflects if it travels with >4.5 degrees towards a surface. Otherwise, it gets diffracted
@@ -831,12 +837,19 @@ void Packets::AdvectWavePackets(float dTime)
 
 
 	// first contact to a boundary -> sent a ghost packet, make packet invisible for now, add 3rd vertex
+	 
 	if (m_usedGhosts + m_usedPackets > m_packetNum)
 		ExpandWavePacketMemory(m_usedGhosts + m_usedPackets + PACKET_BUFFER_DELTA);
+
+	
 	#pragma omp parallel for
 	for (int uP = m_usedPackets-1; uP>=0; uP--)
 		if ((!m_packet[m_usedPacket[uP]].use3rd) && (m_packet[m_usedPacket[uP]].bounced1 || m_packet[m_usedPacket[uP]].bounced2))
 		{
+			// make splash  - add splash 
+
+			m_particles->AddSplash(&m_packet[m_usedPacket[uP]]);
+			// done splash 
 			int i1 = m_usedPacket[uP];
 			int firstghost = GetFreeGhostID();
 			m_ghostPacket[firstghost].pos = 0.5f*(m_packet[i1].pOld1+m_packet[i1].pOld2);

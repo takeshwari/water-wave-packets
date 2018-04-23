@@ -15,6 +15,7 @@
 #include "resource.h"
 #include "Packets.h"
 #include "Render.h"
+#include "SPHParticles.h"
 
 using namespace DirectX;
 
@@ -32,6 +33,8 @@ CDXUTDialog							g_SampleUI;             // dialog for sample specific controls
 float								m_waveSpeedUI = 0.07f;	// timestep for 60Hz: 16ms = 0.016s
 bool								g_showMenue = true;
 Packets*							g_packets;
+// variables for SPH particles 
+Particles*							g_particles;  // splash particles
 Render*								g_render;
 XMVECTOR							m_cursPos;
 int									m_displayedPackets = 0;
@@ -182,6 +185,11 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
 	g_Camera.SetViewParams( vecPos, lookAt );
 	g_render = new Render();
 	g_packets = new Packets(g_SampleUI.GetSlider(IDC_PACKETBUDGET)->GetValue());
+
+	//splash 
+	g_particles = new Particles(); 
+	g_packets->m_particles = g_particles;
+
 	return S_OK;
 }
 
