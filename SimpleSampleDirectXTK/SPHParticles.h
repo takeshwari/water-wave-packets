@@ -54,11 +54,11 @@ public:
 	void RemoveSplash(WAVE_PACKET* packet);
 	void Update(int p_groundSizeY, int p_groundSizeX, float* p_distMap);
 	bool IsSplashDone(WAVE_PACKET* packet);
+	map<WAVE_PACKET*, SplashContainer> splashes;
 	int			m_groundSizeX, m_groundSizeY;	// pixel size of the ground texture
 private:
 	float *m_distMap;
 	float GetBoundaryDist(Vector2f &p);
-	map<WAVE_PACKET*, SplashContainer> splashes;
 	void Integrate();
 	void ComputeDensityPressure(void);
 	void ComputeForces(void);

@@ -288,7 +288,27 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 	pd3dImmediateContext->UpdateSubresource(g_render->m_ppacketPointMesh, 0, NULL, g_render->m_packetData, 0, 0);  // send the wave packet data to the GPU
 	g_render->EvaluatePackets(packetChunk);
 
+	//store splash particle positions into the particlepoints buffer for use in rendering!
+	int splashFluidParticleIndex = 0;
+	int totalSplashFluidParticles = 0;
+	for (auto &splashEntry : g_particles->splashes) {
+		SplashContainer splash = splashEntry.second;
+		for (auto &p : splash.particles) {
+			g_render->m_particleData[splashFluidParticleIndex].pos = XMFLOAT3(p.x.x(),p.x.y(),p.x.z());
+			splashFluidParticleIndex++;
+			//for particles, lets just only store particles that are within the max number of particles for the GPU buffer haha
+			if (splashFluidParticleIndex >= PARTICLES_GPU_BUFFER_SIZE)
+			{
+				pd3dImmediateContext->UpdateSubresource(g_render->m_pparticlePoints, 0, NULL, g_render->m_particleData, 0, 0);
+				totalSplashFluidParticles = splashFluidParticleIndex;
+				splashFluidParticleIndex = 0;
+			}
+		}
+	}
+	g_render->m_particleNum = max(splashFluidParticleIndex, totalSplashFluidParticles);
+
 	g_render->DisplayScene(g_SampleUI.GetCheckBox(IDC_SHOWENVELOPES)->GetChecked(), min(m_displayedPackets, PACKET_GPU_BUFFER_SIZE), mWorldViewProjection);
+
 
 	// update scene cursor position
 	XMVECTOR cPos = g_Camera.GetEyePt();

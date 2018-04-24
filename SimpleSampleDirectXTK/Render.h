@@ -27,6 +27,11 @@ struct PACKET_Vertex
 	XMFLOAT4 att2;		// wave packet attributes needed for rendering: x = center of wave bending circle
 };
 
+struct FLUID_POINT
+{
+	XMFLOAT3 pos;
+};
+
 
 __declspec(align(16)) class Render
 {
@@ -36,6 +41,7 @@ public:
 	ID3D11Buffer	*m_pDisplayMeshIndex;
 	ID3D11Buffer	*m_pHeightfieldMesh;
 	ID3D11Buffer	*m_ppacketPointMesh;
+	ID3D11Buffer	*m_pparticlePoints;
 
 	ID3D11Texture2D	*m_heightTexture;
 	ID3D11Texture2D	*m_posTexture; 
@@ -59,6 +65,7 @@ public:
 	ID3DX11EffectTechnique *m_pRasterizeWaveMeshPositionTechnique;
 	ID3DX11EffectTechnique *m_pDisplayPacketQuadsOutlined;
 	ID3DX11EffectTechnique *m_pDisplayMicroMeshTechnique;
+	ID3DX11EffectTechnique *m_pDisplaySplashFluids;
 	ID3DX11EffectTechnique *m_pDisplayTerrain;
 	ID3DX11EffectTechnique *m_pDisplayAATechnique;
 
@@ -78,6 +85,9 @@ public:
 	// GPU packets 
 	PACKET_Vertex *m_packetData;
 
+	//GPU particles
+	FLUID_POINT *m_particleData;
+	int m_particleNum; //TODO: set this somewhere
 	// terrain and objects
 	int			m_heightfieldVertNum;
 	int			m_displayMeshVertNum;

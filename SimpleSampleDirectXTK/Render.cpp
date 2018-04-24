@@ -77,7 +77,9 @@ int Render::Release(void)
 	m_pQuadMesh->Release();
 	m_pHeightfieldMesh->Release();
 	m_ppacketPointMesh->Release();
+	m_pparticlePoints->Release();
 	delete[](m_packetData);
+	delete[](m_particleData);
 	pd3dDevice->Release();
 	return 0;
 }
@@ -104,11 +106,15 @@ Render::Render()
 	// circular packet initialization
 	m_packetData = new PACKET_Vertex[PACKET_GPU_BUFFER_SIZE];
 
+	//particle data initialization
+	m_particleData = new FLUID_POINT[PARTICLES_GPU_BUFFER_SIZE];
+
 	// connect to shader variables
 	m_pDisplayMicroMeshTechnique = g_pEffect11->GetTechniqueByName( "DisplayMicroMesh" );
 	m_pAddPacketsDisplacementTechnique = g_pEffect11->GetTechniqueByName( "AddPacketDisplacement" );
 	m_pRasterizeWaveMeshPositionTechnique = g_pEffect11->GetTechniqueByName( "RasterizeWaveMeshPosition" );
 	m_pDisplayPacketQuadsOutlined = g_pEffect11->GetTechniqueByName( "DisplayPacketsOutlined" );
+	m_pDisplaySplashFluids = g_pEffect11->GetTechniqueByName("DisplaySplashFluids");
 	m_pDisplayTerrain = g_pEffect11->GetTechniqueByName( "DisplayTerrain" );
 	m_pDisplayAATechnique = g_pEffect11->GetTechniqueByName( "RenderAA" );
 
@@ -175,6 +181,11 @@ Render::Render()
 	bd.ByteWidth = sizeof(PACKET_Vertex) * PACKET_GPU_BUFFER_SIZE;
 	srd = { m_packetData, 0, 0 };
 	pd3dDevice->CreateBuffer(&bd, &srd, &m_ppacketPointMesh);
+
+	//generate a points buffer for all fluid points, will be updated each frame
+	bd.ByteWidth = sizeof(FLUID_POINT) * PARTICLES_GPU_BUFFER_SIZE;
+	srd = { m_particleData, 0, 0 };
+	pd3dDevice->CreateBuffer(&bd, &srd, &m_pparticlePoints);
 
 	pd3dDevice->Release();
 }
@@ -423,19 +434,28 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	UINT stride = sizeof( SIMPLE_Vertex );
 	UINT offset = 0;
 	context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	//set resources for drawing terrain and draw terrain
 	V( m_pOutputTex->SetResource( m_heightTextureRV ) );
 	context->IASetVertexBuffers(0, 1, &m_pHeightfieldMesh, &stride, &offset);
 	context->ClearDepthStencilView( DXUTGetD3D11DepthStencilView(), D3D11_CLEAR_DEPTH, 1.0, 0 );
 	// draw the terrain/boundary heightfield
 	m_pDisplayTerrain->GetPassByIndex( 0 )->Apply(0, context);
 	context->Draw( m_heightfieldVertNum, 0 );
-	// draw the water surface mesh using the computed height and position textures
+
+	// set resources for water surface mesh and draw the water surface mesh using the computed height and position textures
 	V( m_pOutputTex->SetResource( m_heightTextureRV ) );
 	V( m_pWaterPosTex->SetResource( m_posTextureRV ) );
 	context->IASetVertexBuffers(0, 1, &m_pDisplayMesh, &stride, &offset);
 	context->IASetIndexBuffer(m_pDisplayMeshIndex, DXGI_FORMAT_R32_UINT, 0);
 	m_pDisplayMicroMeshTechnique->GetPassByIndex( 0 )->Apply(0, context);
 	context->DrawIndexed(m_displayMeshIndexNum, 0, 0);
+
+	// set resources for splash fluid drawing and draw the splash fluids here
+	stride = sizeof(FLUID_POINT);
+	context->IASetVertexBuffers(0, 1, &m_pparticlePoints, &stride, &offset);
+	m_pDisplaySplashFluids->GetPassByIndex(0)->Apply(0, context);
+	context->Draw(m_particleNum, 0);
+
 	//FROM HERE DRAWING TO SCREEN
 	context->OMSetRenderTargets( 1,  &old_pRTV,  old_pDSV );
 	context->RSSetViewports( NumViewports, &pViewports[0]);
