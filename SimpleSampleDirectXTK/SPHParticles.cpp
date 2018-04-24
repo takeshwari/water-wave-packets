@@ -1,10 +1,31 @@
 #include "SPHParticles.h"
+#include "GlobalDefs.h"
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <math.h>
 //This class keeps track of all SPH-simulated water particles in a scene and simulates them each update step
-void Particles::Update(float(*heightMap)(Vector2f)) {
+void Particles::Update(int p_groundSizeY, int p_groundSizeX, float* p_distMap) {
+	m_groundSizeX = p_groundSizeX;
+	m_groundSizeY = p_groundSizeY;
+	m_distMap = p_distMap;
 	ComputeDensityPressure();
 	ComputeForces();
-	Integrate(heightMap);
+	Integrate();
 	CheckForDoneSplashes();
+}
+
+inline float Particles::GetBoundaryDist(Vector2f &p)
+{
+	Vector2f pTex = Vector2f(p.x() / SCENE_EXTENT + 0.5f, p.y() / SCENE_EXTENT + 0.5f);		// convert from world space to texture space
+	float val1 = m_distMap[(int)(max(0, min(m_groundSizeY - 1, (int) pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1,(int) pTex.x()*m_groundSizeX)))];
+	float val2 = m_distMap[(int)(max(0, min(m_groundSizeY - 1, (int)pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1, 1 + (int)pTex.x()*m_groundSizeX)))];
+	float val3 = m_distMap[(int)(max(0, min(m_groundSizeY - 1, 1 + (int)pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1, (int)pTex.x()*m_groundSizeX)))];
+	float val4 = m_distMap[(int)(max(0, min(m_groundSizeY - 1, 1 + (int)pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1, 1 + (int) pTex.x()*m_groundSizeX)))];
+	float xOffs = (pTex.x()*m_groundSizeX) - (int)(pTex.x()*m_groundSizeX);
+	float yOffs = (pTex.y()*m_groundSizeY) - (int)(pTex.y()*m_groundSizeY);
+	float valH1 = (1.0f - xOffs)*val1 + xOffs*val2;
+	float valH2 = (1.0f - xOffs)*val3 + xOffs*val4;
+	return((1.0f - yOffs)*valH1 + yOffs*valH2);
 }
 
 //iterates through all splashes and checks if that splash is done. If so, remove it!
@@ -100,7 +121,7 @@ void Particles::ComputeForces(void) {
 	}
 }
 
-void Particles::Integrate(float(*heightMap)(Vector2f)) {
+void Particles::Integrate() {
 	for (auto &splashEntry : splashes) {
 		SplashContainer splash = splashEntry.second;
 		for (auto &p : splash.particles)
@@ -133,7 +154,8 @@ void Particles::Integrate(float(*heightMap)(Vector2f)) {
 			}*/
 			//New boundary check for ground geometry
 			//Check if the height of the ground at this particles' 2D position is greater than the particle's height above the water.
-			float groundHeight = heightMap(p.x2D()) * -1.f;
+			Vector2f pos2D = p.x2D();
+			float groundHeight = GetBoundaryDist(pos2D) * -1.f;
 			if (groundHeight < p.x.z()) {
 				//TODO figure out calculations for a reset velocity so that splash particles behave properly
 				p.v *= 0.5f;

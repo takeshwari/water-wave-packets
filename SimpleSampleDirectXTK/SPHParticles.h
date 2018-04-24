@@ -52,11 +52,14 @@ class Particles {
 public:
 	void AddSplash(WAVE_PACKET* packet);
 	void RemoveSplash(WAVE_PACKET* packet);
-	void Update(float (*heightMap)(Vector2f));
+	void Update(int p_groundSizeY, int p_groundSizeX, float* p_distMap);
 	bool IsSplashDone(WAVE_PACKET* packet);
+	int			m_groundSizeX, m_groundSizeY;	// pixel size of the ground texture
 private:
+	float *m_distMap;
+	float GetBoundaryDist(Vector2f &p);
 	map<WAVE_PACKET*, SplashContainer> splashes;
-	void Integrate(float(*heightMap)(Vector2f));
+	void Integrate();
 	void ComputeDensityPressure(void);
 	void ComputeForces(void);
 	void CheckForDoneSplashes();

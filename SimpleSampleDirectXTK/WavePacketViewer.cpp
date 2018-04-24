@@ -227,7 +227,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 	QueryPerformanceCounter(&StartingTimeSim);
 	g_packets->AdvectWavePackets(m_waveSpeedUI);
 	//pass pointer of get boundary dist function to particles update method
-	g_particles->Update(& g_packets->GetBoundaryDist);
+	g_particles->Update(g_packets->m_groundSizeY,g_packets->m_groundSizeX,g_packets->m_distMap);
 	QueryPerformanceCounter(&EndingTimeSim);
 	ElapsedMicrosecondsSim.QuadPart = EndingTimeSim.QuadPart - StartingTimeSim.QuadPart;
 	ElapsedMicrosecondsSim.QuadPart *= 1000000;
