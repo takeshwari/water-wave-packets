@@ -306,6 +306,10 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 			}
 		}
 	}
+	//if we never reached the buffer limit
+	if (totalSplashFluidParticles < splashFluidParticleIndex) {
+		pd3dImmediateContext->UpdateSubresource(g_render->m_pparticlePoints, 0, NULL, g_render->m_particleData, 0, 0);
+	}
 	g_render->m_particleNum = max(splashFluidParticleIndex, totalSplashFluidParticles);
 
 	g_render->DisplayScene(g_SampleUI.GetCheckBox(IDC_SHOWENVELOPES)->GetChecked(), min(m_displayedPackets, PACKET_GPU_BUFFER_SIZE), mWorldViewProjection);
