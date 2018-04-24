@@ -148,6 +148,7 @@ void RenderText(float fElapsedTime)
 	g_pTxtHelper->DrawTextLine( DXUTGetFrameStats( DXUTIsVsyncEnabled() ) );
 	g_pTxtHelper->DrawFormattedTextLine(L"Time: %0.9fs  (timestep: %0.9fs)", g_packets->m_time, g_packets->m_elapsedTime);
 	g_pTxtHelper->DrawFormattedTextLine(L"Simtime: %0.0fms Rendertime: %0.0fms", (double)(ElapsedMicrosecondsSim.QuadPart) / 1000.0, (double)(fElapsedTime)*1000.0 - (double)(ElapsedMicrosecondsSim.QuadPart) / 1000.0);
+	g_pTxtHelper->DrawFormattedTextLine(L"NumParticles: %d", g_render->m_particleNum);
 	float c = 5.0f*std::max<float>(0.0f, (float)(g_packets->m_usedPackets) / (float)(g_packets->m_packetBudget) - 1.0f);
 	g_pTxtHelper->SetForegroundColor(max(0.0f,(1.0f - c))*fgColor + c*Colors::Red);
 	g_pTxtHelper->DrawFormattedTextLine(L"%i packets simulated and %i ghost packets active", g_packets->m_usedPackets, g_packets->m_usedGhosts);

@@ -10,7 +10,8 @@ void Particles::Update(int p_groundSizeY, int p_groundSizeX, float* p_distMap) {
 	m_distMap = p_distMap;
 	ComputeDensityPressure();
 	ComputeForces();
-	Integrate();
+	//Simulation disabled until red dot graphics are debugged
+	//Integrate();
 	CheckForDoneSplashes();
 }
 
@@ -52,6 +53,9 @@ bool Particles::IsSplashDone(WAVE_PACKET* packet) {
 //given a wave packet, generate a splash container for it and add it to the simulation
 void Particles::AddSplash(WAVE_PACKET* packet) {
 	SplashContainer splash = SplashContainer();
+	//Particle p = Particle(packet->pos1.x, packet->pos1.y(), 0.f, 0.f);
+	//PLACEHOLDER - just spawns one particle per packet! Used to debug red dot graphics
+	splash.particles.push_back(Particle(packet->pos1.x(), packet->pos1.y(), 0.f, 0.f));
 	//particle generation algorithm for splash particles
 	//should initialize a bunch of particles for the splash across the surface of the wave packet with proper velocities
 	/*
@@ -156,11 +160,16 @@ void Particles::Integrate() {
 			//Check if the height of the ground at this particles' 2D position is greater than the particle's height above the water.
 			Vector2f pos2D = p.x2D();
 			float groundHeight = GetBoundaryDist(pos2D) * -1.f;
-			if (groundHeight < p.x.z()) {
+			if (groundHeight > p.x.z()) {
 				//TODO figure out calculations for a reset velocity so that splash particles behave properly
 				p.v *= 0.5f;
 				//What we want to do is set the particle's position to be at the ground point instead and multiply its velocity by damping
 				p.x(2) = groundHeight;
+			}
+			else if(p.x.z() < 0.f)
+			{
+				p.v(2) *= -0.5f;
+				p.x(2) = 0.f;
 			}
 		}
 	}

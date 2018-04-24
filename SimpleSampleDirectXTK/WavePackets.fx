@@ -28,6 +28,11 @@ struct VS_INPUT
     float2 pos		: POSITION;
 };
 
+struct VS_INPUT_PARTICLE
+{
+	float3 pPos : POSITION;
+};
+
 struct VS_QUAD_INPUT
 {
     float2 Pos		: POSITION;
@@ -47,6 +52,11 @@ struct PS_INPUT
 {
 	float4 oPosition : SV_POSITION;
     float2 Tex		 : TEXTURE0;
+};
+
+struct PS_INPUT_PARTICLE
+{
+	float4 pPos : SV_POSITION;
 };
 
 struct PS_INPUT_POS
@@ -99,6 +109,7 @@ VS_INPUT_PACKET PacketVS(VS_INPUT_PACKET In)
 {
     return In;
 }
+
 
 
 PS_INPUT_POS DisplayWaveMeshVS(VS_INPUT In )
@@ -155,7 +166,13 @@ PS_INPUT RenderQuadVS(VS_QUAD_INPUT In)
 	return Out;
 }
 
-
+// takes a 3d particle vertex, and projects it to screen for the particle pixel shader
+PS_INPUT_PARTICLE DisplaySplashFluidsVS(VS_INPUT_PARTICLE In)
+{
+	PS_INPUT_PARTICLE Out;
+	Out.pPos = mul(float4(SCENE_EXTENT*0.5*In.pPos, 1.0), g_mWorldViewProjection);
+	return Out;
+}
 
 // ================================================================================
 //
@@ -325,6 +342,15 @@ PS_OUTPUT DisplayTerrainPS(PS_INPUT_POS In)
 	return Out;
 }
 
+// takes a 3d particle vertex, and projects it to screen for the particle pixel shader
+PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
+{
+	PS_OUTPUT Out;
+	Out.oColor.xyz = float3(1.0, 0.0, 0.0);
+	Out.oColor.w = 1.0;
+	return Out;
+}
+
 
 
 // mesh overlay
@@ -454,7 +480,13 @@ technique11 DisplaySplashFluids
 {
 	pass P1
 	{
-		//ALEKS - put in passes for rendering splash fluids here!
+		
+		SetVertexShader(CompileShader(vs_4_0, DisplaySplashFluidsVS()));
+		SetGeometryShader(NULL);
+		SetPixelShader(CompileShader(ps_4_0, DisplaySplashFluidsPS()));
+		SetRasterizerState(state);
+		SetBlendState(NoBlending, float4(1.0f, 1.0f, 1.0f, 1.0f), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 };
 

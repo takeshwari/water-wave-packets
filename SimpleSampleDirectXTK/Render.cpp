@@ -450,12 +450,16 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	m_pDisplayMicroMeshTechnique->GetPassByIndex( 0 )->Apply(0, context);
 	context->DrawIndexed(m_displayMeshIndexNum, 0, 0);
 
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	// set resources for splash fluid drawing and draw the splash fluids here
+	// ALEKS - HERE IS WHERE I ATTEMPTED TO ACTUALLY DRAW TO THE SCREEN RENDER TARGET USING THE FLUID DRAWING PROCEDURE
+	// The buffer should be loaded with all of the particle point data but I have not been able to check
 	stride = sizeof(FLUID_POINT);
 	context->IASetVertexBuffers(0, 1, &m_pparticlePoints, &stride, &offset);
 	m_pDisplaySplashFluids->GetPassByIndex(0)->Apply(0, context);
 	context->Draw(m_particleNum, 0);
 
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	//FROM HERE DRAWING TO SCREEN
 	context->OMSetRenderTargets( 1,  &old_pRTV,  old_pDSV );
 	context->RSSetViewports( NumViewports, &pViewports[0]);
