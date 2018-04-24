@@ -455,7 +455,7 @@ technique11 DisplaySplashFluids
 	pass P1
 	{
 		//ALEKS - put in passes for rendering splash fluids here!
-	};
+	}
 };
 
 
