@@ -245,21 +245,27 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 	XMMATRIX  mWorldViewProjectionWide = XMMatrixMultiply(mView, camWide.GetProjMatrix());
 	g_render->InitiateWavefield(mWorld, mWorldViewProjectionWide);   
 	// transfer and rasterize wave packets and ghost packets to GPU datastructure
+	//start sending packet data to GPU
 	m_displayedPackets = 0;
 	int packetChunk = 0;
+	//iterate through regular packets and render them to water surface heightmap
 	for (int uP = 0; uP<g_packets->m_usedPackets; uP++)  // regular wave packets
 		if (!g_packets->m_packet[g_packets->m_usedPacket[uP]].use3rd)
 		{
 			int i1 = g_packets->m_usedPacket[uP];
+			//format PACKET_VERTEX structs in buffer array that will get sent to GPU (1 struct per packet)
 			g_render->m_packetData[packetChunk].posDir = XMFLOAT4(g_packets->m_packet[i1].midPos.x(), g_packets->m_packet[i1].midPos.y(), g_packets->m_packet[i1].travelDir.x(), g_packets->m_packet[i1].travelDir.y());
 			g_render->m_packetData[packetChunk].att = XMFLOAT4(g_packets->m_packet[i1].ampOld, (float)(2.0*XM_PI / g_packets->m_packet[i1].k), (float)(g_packets->m_packet[i1].phase), (float)(g_packets->m_packet[i1].envelope));
 			g_render->m_packetData[packetChunk].att2 = XMFLOAT4(g_packets->m_packet[i1].bending, 0.0f, 0.0f, 0.0f);
 			m_displayedPackets++;
 			packetChunk++;
-			if (packetChunk >= PACKET_GPU_BUFFER_SIZE)  // send the wave packet data to the GPU
+			if (packetChunk >= PACKET_GPU_BUFFER_SIZE)  // send the wave packet data to the GPU, and then reset our buffer here and start from the beginning
 			{
+				//send packet data to gpu
 				pd3dImmediateContext->UpdateSubresource(g_render->m_ppacketPointMesh, 0, NULL, g_render->m_packetData, 0, 0);
+				//calling eval on the current packet data in the buffer - renders all packets in the current buffer to the water surface heightmap, from 0 to packetChunk
 				g_render->EvaluatePackets(packetChunk);
+				//reset packetChunk
 				packetChunk = 0;
 			}
 		}
@@ -278,8 +284,10 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 			packetChunk = 0;
 		}
 	}
+	//flush out rest of packets in the buffer and render them
 	pd3dImmediateContext->UpdateSubresource(g_render->m_ppacketPointMesh, 0, NULL, g_render->m_packetData, 0, 0);  // send the wave packet data to the GPU
 	g_render->EvaluatePackets(packetChunk);
+
 	g_render->DisplayScene(g_SampleUI.GetCheckBox(IDC_SHOWENVELOPES)->GetChecked(), min(m_displayedPackets, PACKET_GPU_BUFFER_SIZE), mWorldViewProjection);
 
 	// update scene cursor position

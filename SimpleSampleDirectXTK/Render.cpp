@@ -454,6 +454,7 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	V( m_pDiffY->SetFloat( 1.0f/(float)(m_vpAA.Height*4.0f/AA_OVERSAMPLE_FACTOR) ) );
 	m_pDisplayAATechnique->GetPassByIndex(0)->Apply(0, context);   // downsample the rasterized image to screen
 	context->Draw( 2*3, 0 );
+	//Done drawing the input layout
 	if (showPacketQuads)  // show the packet quads outlined, this only shows those in the last chunk!
 	{
 		m_pAddPacketsDisplacementTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
