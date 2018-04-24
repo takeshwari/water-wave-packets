@@ -33,5 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="WavePackets.fx" />
+    <FxCompile Include="RedPixelShader.hlsl" />
+    <FxCompile Include="RedVertexShader.hlsl" />
   </ItemGroup>
 </Project>
