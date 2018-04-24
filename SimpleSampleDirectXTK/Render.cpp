@@ -52,6 +52,10 @@ int Render::PacketElementCount = 3;
 
 int Render::Release(void)
 {
+	// Make sure to release our new shaders
+	// m_vertexShader->Release();
+	// m_pixelShader->Release();
+
 	// first unbind everything from the pipeline
 	m_pOutputTex->SetResource(NULL);
 	m_pWaterPosTex->SetResource(NULL);
