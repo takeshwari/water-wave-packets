@@ -99,6 +99,18 @@ Render::Render()
 	DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"WavePackets.cso");
 	D3DX11CreateEffectFromFile(str, 0, pd3dDevice, &g_pEffect11);
 
+	// Load Red Shaders
+	// ALEKS
+	ifstream vsFile("RedVertexShader.cso", ios::binary);
+	ifstream psFile("RedPixelShader.cso", ios::binary);
+	vector<char> vsData = { istreambuf_iterator<char>(vsFile), istreambuf_iterator<char>() };
+	vector<char> psData = { istreambuf_iterator<char>(psFile), istreambuf_iterator<char>() };
+
+
+	// Need to initialize m_vertexShader and m_pixelShader
+	// pd3dDevice->CreateVertexShader(vsData.data(), vsData.size(), nullptr, &m_vertexShader);
+	// pd3dDevice->CreatePixelShader(psData.data(), psData.size(), nullptr, &m_pixelShader);
+
 	m_pVertexLayout = NULL;
 	m_heightTexture = NULL;
 	m_posTexture = NULL;
@@ -457,14 +469,6 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	// ALEKS - HERE IS WHERE I ATTEMPTED TO ACTUALLY DRAW TO THE SCREEN RENDER TARGET USING THE FLUID DRAWING PROCEDURE
 
 	/*
-	// this needs to be loaded once, not every single time
-	ifstream vsFile("RedVertexShader.cso", ios::binary);
-	ifstream psFile("RedPixelShader.cso", ios::binary);
-	vector<char> vsData = { istreambuf_iterator<char>(vsFile), istreambuf_iterator<char>() };
-	vector<char> psData = { istreambuf_iterator<char>(psFile), istreambuf_iterator<char>() };
-	// renderer needs to be of type Renderer
-	// renderer.getDevice()->CreateVertexShader(vsData.data(), vsData.size(), nullptr, &m_vertexShader);
-	// renderer.getDevice()->CreatePixelShader(psData.data(), psData.size(), nullptr, &m_pixelShader);
 	// Binding should go around here, we must rebind the old shader, though, unless we're finished rendering the other parts
 	// context->VSSetShader(m_vertexShader, nullptr, 0);
 	// context->PSSetShader(m_pixelShader, nullptr, 0);*/
