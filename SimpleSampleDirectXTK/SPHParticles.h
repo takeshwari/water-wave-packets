@@ -53,7 +53,7 @@ public:
 	void AddSplash(WAVE_PACKET* packet);
 	void RemoveSplash(WAVE_PACKET* packet);
 	void Update(float (*heightMap)(Vector2f));
-	void IsSplashDone(WAVE_PACKET* packet);
+	bool IsSplashDone(WAVE_PACKET* packet);
 private:
 	map<WAVE_PACKET*, SplashContainer> splashes;
 	void Integrate(float(*heightMap)(Vector2f));

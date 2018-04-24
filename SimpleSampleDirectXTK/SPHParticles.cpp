@@ -4,16 +4,28 @@ void Particles::Update(float(*heightMap)(Vector2f)) {
 	ComputeDensityPressure();
 	ComputeForces();
 	Integrate(heightMap);
+	CheckForDoneSplashes();
 }
 
 //iterates through all splashes and checks if that splash is done. If so, remove it!
 void Particles::CheckForDoneSplashes() {
+	auto iter = splashes.begin();
+	while (iter != splashes.end()) {
+		bool isDone = false;
 
+		if (isDone) {
+			iter = splashes.erase(iter);
+		}
+		else {
+			iter++;
+		}
+	}
 }
 
-//checks if there is a splash entry for the given wave packet
-void Particles::IsSplashDone(WAVE_PACKET* packet) {
+//checks if there is no longer a splash entry for the given wave packet
 
+bool Particles::IsSplashDone(WAVE_PACKET* packet) {
+	return splashes.find(packet) == splashes.end();
 }
 
 //given a wave packet, generate a splash container for it and add it to the simulation
