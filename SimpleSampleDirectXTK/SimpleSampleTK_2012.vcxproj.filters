@@ -23,6 +23,7 @@
     <ClInclude Include="GlobalDefs.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="SPHParticles.h" />
+    <ClInclude Include="WavePacket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WavePacketViewer.cpp" />

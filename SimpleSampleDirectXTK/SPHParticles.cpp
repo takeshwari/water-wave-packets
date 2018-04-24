@@ -1,9 +1,19 @@
 #include "SPHParticles.h"
 //This class keeps track of all SPH-simulated water particles in a scene and simulates them each update step
-void Particles::Update(Packets* packets) {
+void Particles::Update(float(*heightMap)(Vector2f)) {
 	ComputeDensityPressure();
 	ComputeForces();
-	Integrate(packets);
+	Integrate(heightMap);
+}
+
+//iterates through all splashes and checks if that splash is done. If so, remove it!
+void Particles::CheckForDoneSplashes() {
+
+}
+
+//checks if there is a splash entry for the given wave packet
+void Particles::IsSplashDone(WAVE_PACKET* packet) {
+
 }
 
 //given a wave packet, generate a splash container for it and add it to the simulation
@@ -54,8 +64,8 @@ void Particles::ComputeForces(void) {
 		SplashContainer splash = splashEntry.second;
 		for (auto &pi : splash.particles)
 		{
-			Vector3f fpress(0.f, 0.f);
-			Vector3f fvisc(0.f, 0.f);
+			Vector3f fpress(0.f, 0.f,0.f);
+			Vector3f fvisc(0.f, 0.f,0.f);
 			for (auto &pj : splash.particles)
 			{
 				if (&pi == &pj)
@@ -78,7 +88,7 @@ void Particles::ComputeForces(void) {
 	}
 }
 
-void Particles::Integrate(Packets* packets) {
+void Particles::Integrate(float(*heightMap)(Vector2f)) {
 	for (auto &splashEntry : splashes) {
 		SplashContainer splash = splashEntry.second;
 		for (auto &p : splash.particles)
@@ -111,7 +121,7 @@ void Particles::Integrate(Packets* packets) {
 			}*/
 			//New boundary check for ground geometry
 			//Check if the height of the ground at this particles' 2D position is greater than the particle's height above the water.
-			float groundHeight = packets->GetBoundaryDist(p.x2D()) * -1.f;
+			float groundHeight = heightMap(p.x2D()) * -1.f;
 			if (groundHeight < p.x.z()) {
 				//TODO figure out calculations for a reset velocity so that splash particles behave properly
 				p.v *= 0.5f;

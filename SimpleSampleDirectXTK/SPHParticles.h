@@ -1,11 +1,12 @@
 #pragma once
+
 #include <Eigen/Dense>
 #include <vector>
 #include <map>
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <math.h>
-#include "Packets.h"
+#include "WavePacket.h"
 using namespace std;
 using namespace Eigen;
 
@@ -51,10 +52,12 @@ class Particles {
 public:
 	void AddSplash(WAVE_PACKET* packet);
 	void RemoveSplash(WAVE_PACKET* packet);
-	void Update(Packets* packets);
+	void Update(float (*heightMap)(Vector2f));
+	void IsSplashDone(WAVE_PACKET* packet);
 private:
 	map<WAVE_PACKET*, SplashContainer> splashes;
-	void Integrate(Packets* packets);
+	void Integrate(float(*heightMap)(Vector2f));
 	void ComputeDensityPressure(void);
 	void ComputeForces(void);
+	void CheckForDoneSplashes();
 };
