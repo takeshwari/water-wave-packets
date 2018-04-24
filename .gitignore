@@ -31,4 +31,11 @@
 *.out
 *.app
 /packages/
+\packages\
 !packages
+packages/
+SimpleSampleDirectXTK/x64/
+x64/
+DXUT+DirectXTK Sample.VC.db
+DXUT+DirectXTK Sample.VC.VC.opendb
+ipch/
