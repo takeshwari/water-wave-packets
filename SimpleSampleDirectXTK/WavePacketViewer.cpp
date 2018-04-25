@@ -149,6 +149,21 @@ void RenderText(float fElapsedTime)
 	g_pTxtHelper->DrawFormattedTextLine(L"Time: %0.9fs  (timestep: %0.9fs)", g_packets->m_time, g_packets->m_elapsedTime);
 	g_pTxtHelper->DrawFormattedTextLine(L"Simtime: %0.0fms Rendertime: %0.0fms", (double)(ElapsedMicrosecondsSim.QuadPart) / 1000.0, (double)(fElapsedTime)*1000.0 - (double)(ElapsedMicrosecondsSim.QuadPart) / 1000.0);
 	g_pTxtHelper->DrawFormattedTextLine(L"NumParticles: %d", g_render->m_particleNum);
+	int i = 0;
+	for (auto &splashEntry : g_particles->splashes) {
+		SplashContainer splash = splashEntry.second;
+		if (i < 1) {
+			g_pTxtHelper->DrawFormattedTextLine(L"Splash val: %d", splash.val);
+		}
+		for (auto &p : splash.particles) {
+			if (i < 1) {
+				g_pTxtHelper->DrawFormattedTextLine(L"Particle location: %3.2f,%3.2f,%3.2f", p.x.x(), p.x.y(),p.x.z());
+				g_pTxtHelper->DrawFormattedTextLine(L"Particle velocity: %3.2f,%3.2f,%3.2f", p.v.x(), p.v.y(), p.v.z());
+				g_pTxtHelper->DrawFormattedTextLine(L"Particle rho: %3.2f", p.rho);
+			}
+			i++;
+		}
+	}
 	float c = 5.0f*std::max<float>(0.0f, (float)(g_packets->m_usedPackets) / (float)(g_packets->m_packetBudget) - 1.0f);
 	g_pTxtHelper->SetForegroundColor(max(0.0f,(1.0f - c))*fgColor + c*Colors::Red);
 	g_pTxtHelper->DrawFormattedTextLine(L"%i packets simulated and %i ghost packets active", g_packets->m_usedPackets, g_packets->m_usedGhosts);
@@ -295,7 +310,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 	for (auto &splashEntry : g_particles->splashes) {
 		SplashContainer splash = splashEntry.second;
 		for (auto &p : splash.particles) {
-			g_render->m_particleData[splashFluidParticleIndex].pos = XMFLOAT3(p.x.x(),p.x.y(),p.x.z());
+			g_render->m_particleData[splashFluidParticleIndex].pPos = XMFLOAT3(p.x.x(),p.x.y(), p.x.z());
 			splashFluidParticleIndex++;
 			//for particles, lets just only store particles that are within the max number of particles for the GPU buffer haha
 			if (splashFluidParticleIndex >= PARTICLES_GPU_BUFFER_SIZE)

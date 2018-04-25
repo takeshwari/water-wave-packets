@@ -29,7 +29,7 @@ struct PACKET_Vertex
 
 struct FLUID_POINT
 {
-	XMFLOAT3 pos;
+	XMFLOAT3 pPos;
 };
 
 
@@ -96,9 +96,11 @@ public:
 	static D3D11_INPUT_ELEMENT_DESC SimpleVertexElements[];
 	static D3D11_INPUT_ELEMENT_DESC QuadElements[];
 	static D3D11_INPUT_ELEMENT_DESC PacketElements[];
+	static D3D11_INPUT_ELEMENT_DESC FluidVertexElements[];
 	static int SimpleVertexElementCount;
 	static int QuadElementCount;
 	static int PacketElementCount;
+	static int FluidVertexElementCount;
 
 	virtual ~Render()
 	{

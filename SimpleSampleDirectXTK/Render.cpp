@@ -30,6 +30,8 @@ D3D11_INPUT_ELEMENT_DESC Render::SimpleVertexElements[] =
 int Render::SimpleVertexElementCount = 1;
 
 
+
+
 D3D11_INPUT_ELEMENT_DESC Render::QuadElements[] =
 {
     { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -48,6 +50,12 @@ D3D11_INPUT_ELEMENT_DESC Render::PacketElements[] =
 };
 int Render::PacketElementCount = 3;
 
+D3D11_INPUT_ELEMENT_DESC Render::FluidVertexElements[] =
+{
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ NULL, 0, DXGI_FORMAT_UNKNOWN, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+};
+int Render::FluidVertexElementCount = 1;
 
 
 int Render::Release(void)
@@ -177,12 +185,16 @@ Render::Render()
 	for (int y=0; y<height; y++)
 		for (int x=0; x<width; x++)
 		{
+			//dpd[(y*width + x)].pos = XMFLOAT2(0.f, 0.f);
+			//dpd[(y*width + x)].pos = XMFLOAT2(1.0f*((float)(x) / width - 0.5f), 1.0f*((float)(y) / height - 0.5f));
+			
 			dpd[(y*width + x) * 2 * 3 + 0].pos = XMFLOAT2(2.0f*((float)(x) / width - 0.5f), 2.0f*((float)(y) / height - 0.5f));
 			dpd[(y*width + x) * 2 * 3 + 1].pos = XMFLOAT2(2.0f*((float)(x) / width - 0.5f), 2.0f*((float)(y + 1) / height - 0.5f));
 			dpd[(y*width + x) * 2 * 3 + 2].pos = XMFLOAT2(2.0f*((float)(x + 1) / width - 0.5f), 2.0f*((float)(y) / height - 0.5f));
 			dpd[(y*width + x) * 2 * 3 + 3].pos = XMFLOAT2(2.0f*((float)(x) / width - 0.5f), 2.0f*((float)(y + 1) / height - 0.5f));
 			dpd[(y*width + x) * 2 * 3 + 4].pos = XMFLOAT2(2.0f*((float)(x + 1) / width - 0.5f), 2.0f*((float)(y + 1) / height - 0.5f));
 			dpd[(y*width + x) * 2 * 3 + 5].pos = XMFLOAT2(2.0f*((float)(x + 1) / width - 0.5f), 2.0f*((float)(y) / height - 0.5f));
+			
 		}
 	m_heightfieldVertNum = width*height * 3 * 2;
 	bd.ByteWidth = sizeof(SIMPLE_Vertex) * m_heightfieldVertNum;
@@ -451,7 +463,7 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	pCurveVertexLayout->Release();
 	UINT stride = sizeof( SIMPLE_Vertex );
 	UINT offset = 0;
-	context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	//set resources for drawing terrain and draw terrain
 	V( m_pOutputTex->SetResource( m_heightTextureRV ) );
 	context->IASetVertexBuffers(0, 1, &m_pHeightfieldMesh, &stride, &offset);
@@ -459,7 +471,7 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	// draw the terrain/boundary heightfield
 	m_pDisplayTerrain->GetPassByIndex( 0 )->Apply(0, context);
 	context->Draw( m_heightfieldVertNum, 0 );
-
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// set resources for water surface mesh and draw the water surface mesh using the computed height and position textures
 	V( m_pOutputTex->SetResource( m_heightTextureRV ) );
 	V( m_pWaterPosTex->SetResource( m_posTextureRV ) );
@@ -476,10 +488,15 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	// Binding should go around here, we must rebind the old shader, though, unless we're finished rendering the other parts
 	// context->VSSetShader(m_vertexShader, nullptr, 0);
 	// context->PSSetShader(m_pixelShader, nullptr, 0);*/
-
+	ID3D11InputLayout* pFluidVertexLayout;
+	if (FAILED(pd3dDevice->CreateInputLayout(FluidVertexElements, FluidVertexElementCount, PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &pFluidVertexLayout)))
+		return;
+	context->IASetInputLayout(pFluidVertexLayout);
+	pFluidVertexLayout->Release();
 	// The buffer should be loaded with all of the particle point data but I have not been able to check
-	stride = sizeof(FLUID_POINT);
-	context->IASetVertexBuffers(0, 1, &m_pparticlePoints, &stride, &offset);
+	UINT newStride = sizeof(FLUID_POINT);
+	offset = 0;
+	context->IASetVertexBuffers(0, 1, &m_pparticlePoints, &newStride, &offset);
 	m_pDisplaySplashFluids->GetPassByIndex(0)->Apply(0, context);
 	context->Draw(m_particleNum, 0);
 

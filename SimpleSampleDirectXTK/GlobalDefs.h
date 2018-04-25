@@ -10,7 +10,7 @@
 
 // rendering parameters
 #define PACKET_GPU_BUFFER_SIZE 1000000		// maximum number of wave packets to be displayed in one draw call
-#define PARTICLES_GPU_BUFFER_SIZE 10000		// maximum number of fluid particles to be displayed in one draw call
+#define PARTICLES_GPU_BUFFER_SIZE 100000		// maximum number of fluid particles to be displayed in one draw call
 
 
 // Fast rendering setup

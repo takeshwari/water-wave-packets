@@ -149,9 +149,26 @@ PS_INPUT_POS DisplayTerrainVS(VS_INPUT In)
 {
 	PS_INPUT_POS Out;
 	Out.Tex = 0.5*(In.pos.xy+float2(1.0,1.0));
+
+	
+
 	float h = 0.001*(-3.5+80.0*g_waterTerrainTex.SampleLevel(LinearSampler, Out.Tex, 0).y);
+	//if (In.pos.x == 0.f && In.pos.y == 0.f) {
+	//	h = 0.1f;
+	//}
 	Out.Pos = SCENE_EXTENT*0.5*float3(In.pos.x, h, In.pos.y);
 	Out.oPosition = mul(float4(Out.Pos,1.0), g_mWorldViewProjection);
+	return Out;
+}
+
+// takes a simple 2D vertex on the ground plane, offsets it along y by the land or water offset and projects it on screen
+PS_INPUT_POS DisplayTerrainParticleVS(VS_INPUT_PARTICLE In)
+{
+	PS_INPUT_POS Out;
+	//Out.Tex = 0.5*(float2(1.0, 1.0));
+	//float h = 0.01*(-3.5 + 80.0*g_waterTerrainTex.SampleLevel(LinearSampler, Out.Tex, 0).y);
+	Out.Pos = float3(In.pPos.x, 5.f, In.pPos.z);
+	Out.oPosition = mul(float4(Out.Pos, 1.0), g_mWorldViewProjection);
 	return Out;
 }
 
@@ -170,7 +187,8 @@ PS_INPUT RenderQuadVS(VS_QUAD_INPUT In)
 PS_INPUT_PARTICLE DisplaySplashFluidsVS(VS_INPUT_PARTICLE In)
 {
 	PS_INPUT_PARTICLE Out;
-	Out.pPos = mul(float4(SCENE_EXTENT*0.5*In.pPos, 1.0), g_mWorldViewProjection);
+	Out.pPos = mul(float4(In.pPos.x, In.pPos.y, In.pPos.z,1.0),g_mWorldViewProjection);
+	//Out.pPos = mul(float4(SCENE_EXTENT*0.5*In.pPos, 1.0), g_mWorldViewProjection);
 	return Out;
 }
 
@@ -337,6 +355,7 @@ PS_OUTPUT DisplayTerrainPS(PS_INPUT_POS In)
 	PS_OUTPUT Out; 
 	if (In.Pos.y < -0.1)
 		clip(-1);
+	//Out.oColor.xyz = float3(1.f, 0.f, 0.f);
 	Out.oColor.xyz = (0.25+0.75*In.Pos.y)*float3(0.75, 0.75, 0.75);
 	Out.oColor.w = 1.0;
 	return Out;
@@ -398,6 +417,12 @@ DepthStencilState soliddepth
 	DepthEnable = FALSE;
 };
 
+RasterizerState pixel
+{
+	FillMode = Wireframe;
+	CullMode = None;
+	MultisampleEnable = FALSE;
+};
 
 RasterizerState state
 {
@@ -484,7 +509,7 @@ technique11 DisplaySplashFluids
 		SetVertexShader(CompileShader(vs_4_0, DisplaySplashFluidsVS()));
 		SetGeometryShader(NULL);
 		SetPixelShader(CompileShader(ps_4_0, DisplaySplashFluidsPS()));
-		SetRasterizerState(state);
+		SetRasterizerState(pixel);
 		SetBlendState(NoBlending, float4(1.0f, 1.0f, 1.0f, 1.0f), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);
 	}

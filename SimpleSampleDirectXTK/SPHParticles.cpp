@@ -11,7 +11,7 @@ void Particles::Update(int p_groundSizeY, int p_groundSizeX, float* p_distMap) {
 	ComputeDensityPressure();
 	ComputeForces();
 	//Simulation disabled until red dot graphics are debugged
-	//Integrate();
+	Integrate();
 	CheckForDoneSplashes();
 }
 
@@ -35,6 +35,15 @@ void Particles::CheckForDoneSplashes() {
 	while (iter != splashes.end()) {
 		bool isDone = false;
 
+		SplashContainer splash = iter->second;
+		bool isFlat = true;
+		for (auto &p : splash.particles) {
+			if (p.v.norm() > 0.6f) {
+				isFlat = false;
+			}
+		}
+
+		isDone = isFlat;
 		if (isDone) {
 			iter = splashes.erase(iter);
 		}
@@ -55,7 +64,54 @@ void Particles::AddSplash(WAVE_PACKET* packet) {
 	SplashContainer splash = SplashContainer();
 	//Particle p = Particle(packet->pos1.x, packet->pos1.y(), 0.f, 0.f);
 	//PLACEHOLDER - just spawns one particle per packet! Used to debug red dot graphics
-	splash.particles.push_back(Particle(packet->pos1.x(), packet->pos1.y(), 0.f, 0.f));
+	/*for (int x = 0; x < 10; x++) {
+		for (int z = 0; z < 10; z++) {
+			splash.particles.push_back(Particle(5.f + (float)x, 30.f+ (float)z, 0.f, 0.f));
+		}
+	}*/
+	//splash.particles.push_back(Particle(0.f, 0.f, 0.f, 0.f));
+	
+
+	// Plan out algorithm for packet here:
+
+	/*
+	
+		1. Find packet width (width)
+		2. Find packet length (length)
+		3. Find packet forward vector (vF)
+		4. Find packet right vector (vR)
+		5. Find front left corner point of packet 9	(flCornerPt)
+		6. Set spacing const (p)
+		7. Find numCols (nC = width/p)
+		8. Find numRows (nR = length/p)
+		9. Find packet speed (s)
+		10. Find particle velocities (pVel)
+
+		- frontEdge is defined by:	 flCornerPt + vR * p * i [i from 0 -> numCols]
+		- trailingEdge(pt) is defined by: pt - vF * p * i [i from 0 -> numRows]
+
+		6. FOREACH (point pt in frontEdge):
+				FOR (point trailPt in trailingEdge(pt)):
+					add particle (pos=trailPt, vel= vF * s
+	*/
+	float width = packet->envelope * 2;
+	float length = packet->envelope;
+	Vector2f vF = packet->travelDir;
+	Vector2f vR = Vector2f(vF.y(), -1 * vF.x());
+	Vector2f flCornerPt = packet->midPos - packet->envelope * vR;
+	float p = 0.5f;//spacing
+	int nC = (int) (width / p);
+	int nR = (int) (length / p);
+	float s = (packet->speed1 + packet->speed2)/2.f;
+	Vector2f pVel = vF * s;
+
+	for (int w = 0; w <= nC; w++) {
+		Vector2f frontEdgePoint = flCornerPt + vR * p * w;
+		for (int d = 0; d <= nR; d++) {
+			Vector2f depthPoint = frontEdgePoint - vF * p * d;
+			splash.particles.push_back(Particle(depthPoint.x(),depthPoint.y(), pVel.x(), pVel.y()));
+		}
+	}
 	//particle generation algorithm for splash particles
 	//should initialize a bunch of particles for the splash across the surface of the wave packet with proper velocities
 	/*
@@ -76,11 +132,12 @@ void Particles::RemoveSplash(WAVE_PACKET* packet) {
 
 void Particles::ComputeDensityPressure(void) {
 	for (auto &splashEntry : splashes) {
-		SplashContainer splash = splashEntry.second;
-		for (auto &pi : splash.particles)
+		SplashContainer* splash = &splashEntry.second;
+		splash->val = 1;
+		for (auto &pi : splash->particles)
 		{
 			pi.rho = 0.f;
-			for (auto &pj : splash.particles)
+			for (auto &pj : splash->particles)
 			{
 				Vector3f rij = pj.x - pi.x;
 				float r2 = rij.squaredNorm();
@@ -98,12 +155,12 @@ void Particles::ComputeDensityPressure(void) {
 
 void Particles::ComputeForces(void) {
 	for (auto &splashEntry : splashes) {
-		SplashContainer splash = splashEntry.second;
-		for (auto &pi : splash.particles)
+		SplashContainer* splash = &splashEntry.second;
+		for (auto &pi : splash->particles)
 		{
 			Vector3f fpress(0.f, 0.f,0.f);
 			Vector3f fvisc(0.f, 0.f,0.f);
-			for (auto &pj : splash.particles)
+			for (auto &pj : splash->particles)
 			{
 				if (&pi == &pj)
 					continue;
@@ -127,8 +184,8 @@ void Particles::ComputeForces(void) {
 
 void Particles::Integrate() {
 	for (auto &splashEntry : splashes) {
-		SplashContainer splash = splashEntry.second;
-		for (auto &p : splash.particles)
+		SplashContainer* splash = &splashEntry.second;
+		for (auto &p : splash->particles)
 		{
 			// forward Euler integration
 			p.v += DT*p.f / p.rho;
@@ -158,19 +215,27 @@ void Particles::Integrate() {
 			}*/
 			//New boundary check for ground geometry
 			//Check if the height of the ground at this particles' 2D position is greater than the particle's height above the water.
+			
 			Vector2f pos2D = p.x2D();
 			float groundHeight = GetBoundaryDist(pos2D) * -1.f;
-			if (groundHeight > p.x.z()) {
+			if (groundHeight > p.x.y()) {
 				//TODO figure out calculations for a reset velocity so that splash particles behave properly
-				p.v *= 0.5f;
-				//What we want to do is set the particle's position to be at the ground point instead and multiply its velocity by damping
-				p.x(2) = groundHeight;
-			}
-			else if(p.x.z() < 0.f)
-			{
+				p.v(0) *= -0.5f;
 				p.v(2) *= -0.5f;
-				p.x(2) = 0.f;
+				if (p.v.y() < -1.f) {
+					p.v(1) *= -1.f;
+				}
+				Vector2f horiz = Vector2f(p.v.x(), p.v.z());
+				p.v(1) += horiz.norm();
+				//What we want to do is set the particle's position to be at the ground point instead and multiply its velocity by damping
+				p.x(1) = groundHeight;
 			}
+			else if(p.x.y() < 0.05f)
+			{
+				p.v(1) *= -0.5f;
+				p.x(1) = 0.05f;
+			}
+			
 		}
 	}
 }
