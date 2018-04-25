@@ -43,7 +43,7 @@ void Particles::CheckForDoneSplashes() {
 			}
 		}
 
-		isDone = isFlat;
+		isDone = isFlat || splash.time > SPLASH_LIFETIME;
 		if (isDone) {
 			iter = splashes.erase(iter);
 		}
@@ -185,6 +185,7 @@ void Particles::ComputeForces(void) {
 void Particles::Integrate() {
 	for (auto &splashEntry : splashes) {
 		SplashContainer* splash = &splashEntry.second;
+		splash->time += DT;
 		for (auto &p : splash->particles)
 		{
 			// forward Euler integration
