@@ -46,6 +46,20 @@ struct VS_INPUT_PACKET
 	float4 Att2	: TEXTURE1;
 };
 
+//------- Geometry shader structures
+
+struct GS_INPUT
+{
+	float4	pos		: POSITION;
+	float3	normal	: NORMAL;
+	float2  tex0	: TEXCOORD0;
+};
+
+struct GS_INPUT_PARTICLE
+{
+	float4 pPos : SV_POSITION;
+};
+
 //------- Pixel shader structures
 
 struct PS_INPUT
@@ -57,6 +71,7 @@ struct PS_INPUT
 struct PS_INPUT_PARTICLE
 {
 	float4 pPos : SV_POSITION;
+	float2 tex0	: TEXCOORD0;
 };
 
 struct PS_INPUT_POS
@@ -184,9 +199,9 @@ PS_INPUT RenderQuadVS(VS_QUAD_INPUT In)
 }
 
 // takes a 3d particle vertex, and projects it to screen for the particle pixel shader
-PS_INPUT_PARTICLE DisplaySplashFluidsVS(VS_INPUT_PARTICLE In)
+GS_INPUT_PARTICLE DisplaySplashFluidsVS(VS_INPUT_PARTICLE In)
 {
-	PS_INPUT_PARTICLE Out;
+	GS_INPUT_PARTICLE Out;
 	Out.pPos = mul(float4(In.pPos.x, In.pPos.y, In.pPos.z,1.0),g_mWorldViewProjection);
 	//Out.pPos = mul(float4(SCENE_EXTENT*0.5*In.pPos, 1.0), g_mWorldViewProjection);
 	return Out;
@@ -271,6 +286,44 @@ void DisplayMicroMeshGS( triangle PS_INPUT_POS input[3], inout TriangleStream<PS
 	tStream.Append(input[0]);
 	tStream.Append(input[1]);
 	tStream.Append(input[2]);
+}
+
+[maxvertexcount(4)]
+void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS_INPUT_PARTICLE> triStream)
+{
+	// UNITY_MATRIX_MV is the model * view matrix
+	float3 up = -g_mWorldViewProjection[1].xyz;
+	// _WorldSpaceCameraPos is the location in world space of the camera
+	float3 look = g_mWorldViewProjection[3].xyz - p[0].pPos;
+	look.y = 0;
+	look = normalize(look);
+	float3 right = g_mWorldViewProjection[0].xyz;
+
+	float halfS = 0.5f;
+
+	float4 v[4];
+	v[0] = float4(p[0].pPos + halfS * right - halfS * up, 1.0f);
+	v[1] = float4(p[0].pPos + halfS * right + halfS * up, 1.0f);
+	v[2] = float4(p[0].pPos - halfS * right - halfS * up, 1.0f);
+	v[3] = float4(p[0].pPos - halfS * right + halfS * up, 1.0f);
+
+	PS_INPUT_PARTICLE pIn;
+	// Is g_mWorldViewProject the Model*View*Projection Matrix ????
+	pIn.pPos = mul(g_mWorldViewProjection, v[0]);
+	pIn.tex0 = float2(1.0f, 0.0f);
+	triStream.Append(pIn);
+
+	pIn.pPos = mul(g_mWorldViewProjection, v[1]);
+	pIn.tex0 = float2(1.0f, 1.0f);
+	triStream.Append(pIn);
+
+	pIn.pPos = mul(g_mWorldViewProjection, v[2]);
+	pIn.tex0 = float2(0.0f, 0.0f);
+	triStream.Append(pIn);
+
+	pIn.pPos = mul(g_mWorldViewProjection, v[3]);
+	pIn.tex0 = float2(0.0f, 1.0f);
+	triStream.Append(pIn);
 }
 
 
@@ -365,8 +418,47 @@ PS_OUTPUT DisplayTerrainPS(PS_INPUT_POS In)
 PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 {
 	PS_OUTPUT Out;
-	Out.oColor.xyz = float3(1.0, 0.0, 0.0);
-	Out.oColor.w = 1.0;
+
+	float blurScale = 1;
+	float blurDepthFalloff = 1;
+	float filterRadius = 1;
+	float sum = 0;
+	float wsum = 0;
+
+	// calculate eye-space sphere normal from texture coordinates
+	float3 N;
+	N.xy = In.tex0 * 2.0f - 1.0f;
+	float r2 = dot(N.xy, N.xy);
+	if (r2 > 1.0f) discard; // kill pixels outside circle
+	N.z = -sqrt(1.0f - r2);
+	// calculate depth
+	float4 pixelPos = float4(g_mWorld[3].xyz + N * 1.0f, 1.0f);
+	float4 clipSpacePos = In.pPos;
+	float calculatedDepth = clipSpacePos.z / clipSpacePos.w;
+	float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
+
+	for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
+		float loopSample = depthColor;
+
+		// spatial domain
+		float r = x * blurScale;
+		float w = exp(-r * r);
+
+		// range domain
+		float r2 = (loopSample - calculatedDepth) * blurDepthFalloff;
+		float g = exp(-r2 * r2);
+
+		sum += loopSample * w * g;
+		wsum += w * g;
+	}
+
+	if (wsum > 0.0f) {
+		sum /= wsum;
+	}
+
+	Out.oColor.xyz = float3(sum, sum, sum);
+	Out.oColor.w = 1.0f;
+
 	return Out;
 }
 
