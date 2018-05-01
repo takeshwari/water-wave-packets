@@ -291,8 +291,8 @@ void DisplayMicroMeshGS( triangle PS_INPUT_POS input[3], inout TriangleStream<PS
 [maxvertexcount(4)]
 void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS_INPUT_PARTICLE> triStream)
 {
-	float3 up = float3(1, 0, 0);
-	float3 right = float3(0, 0, 1);
+	float3 up = g_mWorld[1];
+	float3 right = g_mWorld[0];
 
 	float size = 0.1f;
 
