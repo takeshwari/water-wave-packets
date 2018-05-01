@@ -291,13 +291,14 @@ void DisplayMicroMeshGS( triangle PS_INPUT_POS input[3], inout TriangleStream<PS
 [maxvertexcount(4)]
 void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS_INPUT_PARTICLE> triStream)
 {
+	// Placeholder, not correct
+	float4x4 g_mModelViewProjection = g_mWorld;
+	float4x4 g_mModelView = g_mWorldViewProjection;
+	float4x4 g_mView = g_mWorldViewProjection;
+
 	// UNITY_MATRIX_MV is the model * view matrix
-	float3 up = -g_mWorldViewProjection[1].xyz;
-	// _WorldSpaceCameraPos is the location in world space of the camera
-	float3 look = g_mWorldViewProjection[3].xyz - p[0].pPos;
-	look.y = 0;
-	look = normalize(look);
-	float3 right = g_mWorldViewProjection[0].xyz;
+	float3 up = mul(g_mView, float3(0, 1, 0));
+	float3 right = mul(g_mView, float3(1, 0, 0));
 
 	float halfS = 0.5f;
 
@@ -308,20 +309,20 @@ void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS
 	v[3] = float4(p[0].pPos - halfS * right + halfS * up, 1.0f);
 
 	PS_INPUT_PARTICLE pIn;
-	// Is g_mWorldViewProject the Model*View*Projection Matrix ????
-	pIn.pPos = mul(g_mWorldViewProjection, v[0]);
+	// Still looking for ModelViewProjection Matrix
+	pIn.pPos = mul(g_mModelViewProjection, v[0]);
 	pIn.tex0 = float2(1.0f, 0.0f);
 	triStream.Append(pIn);
 
-	pIn.pPos = mul(g_mWorldViewProjection, v[1]);
+	pIn.pPos = mul(g_mModelViewProjection, v[1]);
 	pIn.tex0 = float2(1.0f, 1.0f);
 	triStream.Append(pIn);
 
-	pIn.pPos = mul(g_mWorldViewProjection, v[2]);
+	pIn.pPos = mul(g_mModelViewProjection, v[2]);
 	pIn.tex0 = float2(0.0f, 0.0f);
 	triStream.Append(pIn);
 
-	pIn.pPos = mul(g_mWorldViewProjection, v[3]);
+	pIn.pPos = mul(g_mModelViewProjection, v[3]);
 	pIn.tex0 = float2(0.0f, 1.0f);
 	triStream.Append(pIn);
 }
