@@ -599,7 +599,7 @@ technique11 DisplaySplashFluids
 	{
 		
 		SetVertexShader(CompileShader(vs_4_0, DisplaySplashFluidsVS()));
-		SetGeometryShader(NULL);
+		SetGeometryShader(CompileShader(gs_4_0, DisplaySplashFluidsGS()));
 		SetPixelShader(CompileShader(ps_4_0, DisplaySplashFluidsPS()));
 		SetRasterizerState(pixel);
 		SetBlendState(NoBlending, float4(1.0f, 1.0f, 1.0f, 1.0f), 0xFFFFFFFF);
