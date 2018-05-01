@@ -202,7 +202,7 @@ PS_INPUT RenderQuadVS(VS_QUAD_INPUT In)
 GS_INPUT_PARTICLE DisplaySplashFluidsVS(VS_INPUT_PARTICLE In)
 {
 	GS_INPUT_PARTICLE Out;
-	Out.pPos = mul(float4(In.pPos.x, In.pPos.y, In.pPos.z,1.0),g_mWorldViewProjection);
+	Out.pPos = float4(In.pPos.x, In.pPos.y, In.pPos.z,1.0);
 	//Out.pPos = mul(float4(SCENE_EXTENT*0.5*In.pPos, 1.0), g_mWorldViewProjection);
 	return Out;
 }
@@ -292,37 +292,34 @@ void DisplayMicroMeshGS( triangle PS_INPUT_POS input[3], inout TriangleStream<PS
 void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS_INPUT_PARTICLE> triStream)
 {
 	// Placeholder, not correct
-	float4x4 g_mModelViewProjection = g_mWorld;
-	float4x4 g_mModelView = g_mWorldViewProjection;
+	float4x4 g_mModelViewProjection = g_mWorldViewProjection;
 	float4x4 g_mView = g_mWorldViewProjection;
 
-	// UNITY_MATRIX_MV is the model * view matrix
-	float3 up = mul(g_mView, float3(0, 1, 0));
-	float3 right = mul(g_mView, float3(1, 0, 0));
+	float3 up = float3(0, 0, -1);
+	float3 right = float3(0, -1, 0);
 
-	float halfS = 0.5f;
+	float size = 0.5f;
 
 	float4 v[4];
-	v[0] = float4(p[0].pPos + halfS * right - halfS * up, 1.0f);
-	v[1] = float4(p[0].pPos + halfS * right + halfS * up, 1.0f);
-	v[2] = float4(p[0].pPos - halfS * right - halfS * up, 1.0f);
-	v[3] = float4(p[0].pPos - halfS * right + halfS * up, 1.0f);
+	v[0] = float4(p[0].pPos + size * right - size * up, 1.0f);
+	v[1] = float4(p[0].pPos + size * right + size * up, 1.0f);
+	v[2] = float4(p[0].pPos - size * right - size * up, 1.0f);
+	v[3] = float4(p[0].pPos - size * right + size * up, 1.0f);
 
 	PS_INPUT_PARTICLE pIn;
-	// Still looking for ModelViewProjection Matrix
-	pIn.pPos = mul(g_mModelViewProjection, v[0]);
+	pIn.pPos = mul(v[0], g_mWorldViewProjection);
 	pIn.tex0 = float2(1.0f, 0.0f);
 	triStream.Append(pIn);
 
-	pIn.pPos = mul(g_mModelViewProjection, v[1]);
+	pIn.pPos = mul(v[1], g_mWorldViewProjection);
 	pIn.tex0 = float2(1.0f, 1.0f);
 	triStream.Append(pIn);
 
-	pIn.pPos = mul(g_mModelViewProjection, v[2]);
+	pIn.pPos = mul(v[2], g_mWorldViewProjection);
 	pIn.tex0 = float2(0.0f, 0.0f);
 	triStream.Append(pIn);
 
-	pIn.pPos = mul(g_mModelViewProjection, v[3]);
+	pIn.pPos = mul(v[3], g_mWorldViewProjection);
 	pIn.tex0 = float2(0.0f, 1.0f);
 	triStream.Append(pIn);
 }
@@ -437,7 +434,7 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	// calculate depth
 	float4 pixelPos = float4(g_mWorld[3].xyz + N * 1.0f, 1.0f);
 	float4 clipSpacePos = In.pPos;
-	float calculatedDepth = clipSpacePos.z / clipSpacePos.w;
+	float calculatedDepth = clipSpacePos.w / clipSpacePos.z;
 	float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
 
 	for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
