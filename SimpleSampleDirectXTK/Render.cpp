@@ -483,11 +483,6 @@ void Render::DisplayScene(bool showPacketQuads, int usedpackets, XMMATRIX &mWorl
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	// set resources for splash fluid drawing and draw the splash fluids here
 	// ALEKS - HERE IS WHERE I ATTEMPTED TO ACTUALLY DRAW TO THE SCREEN RENDER TARGET USING THE FLUID DRAWING PROCEDURE
-
-	/*
-	// Binding should go around here, we must rebind the old shader, though, unless we're finished rendering the other parts
-	// context->VSSetShader(m_vertexShader, nullptr, 0);
-	// context->PSSetShader(m_pixelShader, nullptr, 0);*/
 	ID3D11InputLayout* pFluidVertexLayout;
 	if (FAILED(pd3dDevice->CreateInputLayout(FluidVertexElements, FluidVertexElementCount, PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &pFluidVertexLayout)))
 		return;
