@@ -291,14 +291,10 @@ void DisplayMicroMeshGS( triangle PS_INPUT_POS input[3], inout TriangleStream<PS
 [maxvertexcount(4)]
 void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS_INPUT_PARTICLE> triStream)
 {
-	// Placeholder, not correct
-	float4x4 g_mModelViewProjection = g_mWorldViewProjection;
-	float4x4 g_mView = g_mWorldViewProjection;
-
 	float3 up = float3(1, 0, 0);
 	float3 right = float3(0, 0, 1);
 
-	float size = 0.5f;
+	float size = 0.1f;
 
 	float4 v[4];
 	v[0] = float4(p[0].pPos + size * right - size * up, 1.0f);
@@ -426,16 +422,18 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	// calculate eye-space sphere normal from texture coordinates
 	float3 N;
 	N.xy = In.tex0 * 2.0f - 1.0f;
-	/*float r2 = dot(N.xy, N.xy);
+	// This code works, do not remove
+	// Commented out to see the full square until it is filled
+	float r2 = dot(N.xy, N.xy);
 	if (r2 > 1.0f) discard; // kill pixels outside circle
-	N.z = -sqrt(1.0f - r2);*/
+	N.z = -sqrt(1.0f - r2);
 	// calculate depth
 	float4 pixelPos = float4(g_mWorld[3].xyz + N * 1.0f, 1.0f);
 	float4 clipSpacePos = In.pPos;
-	float calculatedDepth = clipSpacePos.w / clipSpacePos.z;
+	float calculatedDepth = clipSpacePos.w;
 	float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
 
-	for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
+	/*for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
 		float loopSample = depthColor;
 
 		// spatial domain
@@ -455,7 +453,9 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	}
 
 	Out.oColor.xyz = float3(sum, sum, sum);
-	Out.oColor.w = 1.0f;
+	Out.oColor.w = 1.0f;*/
+
+	Out.oColor = depthColor;
 
 	return Out;
 }
@@ -599,7 +599,7 @@ technique11 DisplaySplashFluids
 		SetVertexShader(CompileShader(vs_4_0, DisplaySplashFluidsVS()));
 		SetGeometryShader(CompileShader(gs_4_0, DisplaySplashFluidsGS()));
 		SetPixelShader(CompileShader(ps_4_0, DisplaySplashFluidsPS()));
-		SetRasterizerState(pixel);
+		SetRasterizerState(state);
 		SetBlendState(NoBlending, float4(1.0f, 1.0f, 1.0f, 1.0f), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);
 	}
