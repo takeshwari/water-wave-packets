@@ -295,8 +295,8 @@ void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS
 	float4x4 g_mModelViewProjection = g_mWorldViewProjection;
 	float4x4 g_mView = g_mWorldViewProjection;
 
-	float3 up = float3(0, 0, -1);
-	float3 right = float3(0, -1, 0);
+	float3 up = float3(1, 0, 0);
+	float3 right = float3(0, 0, 1);
 
 	float size = 0.5f;
 
@@ -318,7 +318,7 @@ void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS
 	pIn.pPos = mul(v[2], g_mWorldViewProjection);
 	pIn.tex0 = float2(0.0f, 0.0f);
 	triStream.Append(pIn);
-
+	
 	pIn.pPos = mul(v[3], g_mWorldViewProjection);
 	pIn.tex0 = float2(0.0f, 1.0f);
 	triStream.Append(pIn);
@@ -426,9 +426,9 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	// calculate eye-space sphere normal from texture coordinates
 	float3 N;
 	N.xy = In.tex0 * 2.0f - 1.0f;
-	float r2 = dot(N.xy, N.xy);
+	/*float r2 = dot(N.xy, N.xy);
 	if (r2 > 1.0f) discard; // kill pixels outside circle
-	N.z = -sqrt(1.0f - r2);
+	N.z = -sqrt(1.0f - r2);*/
 	// calculate depth
 	float4 pixelPos = float4(g_mWorld[3].xyz + N * 1.0f, 1.0f);
 	float4 clipSpacePos = In.pPos;
