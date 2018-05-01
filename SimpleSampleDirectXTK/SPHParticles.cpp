@@ -58,7 +58,22 @@ void Particles::CheckForDoneSplashes() {
 bool Particles::IsSplashDone(WAVE_PACKET* packet) {
 	return splashes.find(packet) == splashes.end();
 }
-
+void Particles::AddTestSplash() {
+	WAVE_PACKET testP = WAVE_PACKET();
+	SplashContainer splash = SplashContainer();
+	
+	float size = 2;
+	int resolution = 10;
+	Vector2f startPosition = Vector2f(10.f, 10.f);
+	splash.radius = size / 2;
+	splash.startPosition = startPosition + Vector2f((float)size / 2, (float)size / 2);
+	for (int x = 0; x < resolution; x++) {
+		for (int z = 0; z < resolution; z++) {
+			splash.particles.push_back(Particle(startPosition.x() + ((float)x/resolution)*size, startPosition.y() + ((float)z / resolution)*size, 0.f, 0.f));
+		}
+	}
+	splashes.insert(std::make_pair(&testP, splash));
+}
 //given a wave packet, generate a splash container for it and add it to the simulation
 void Particles::AddSplash(WAVE_PACKET* packet) {
 	SplashContainer splash = SplashContainer();
@@ -218,6 +233,15 @@ void Particles::Integrate() {
 			//Check if the height of the ground at this particles' 2D position is greater than the particle's height above the water.
 			
 			Vector2f pos2D = p.x2D();
+
+			Vector2f flatDiff = pos2D - splash->startPosition;
+			float norm = flatDiff.norm();
+			if (norm > splash->radius) {
+				p.v *= -0.5f;
+				Vector2f flatPos = splash->startPosition + (flatDiff / norm) * splash->radius;
+				p.x = Vector3f(flatPos.x(), 0.05f, flatPos.y());
+			}
+
 			float groundHeight = GetBoundaryDist(pos2D) * -1.f;
 			if (groundHeight > p.x.y()) {
 				//TODO figure out calculations for a reset velocity so that splash particles behave properly

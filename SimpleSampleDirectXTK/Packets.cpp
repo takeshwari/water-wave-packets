@@ -847,8 +847,10 @@ void Packets::AdvectWavePackets(float dTime)
 		if ((!m_packet[m_usedPacket[uP]].use3rd) && (m_packet[m_usedPacket[uP]].bounced1 || m_packet[m_usedPacket[uP]].bounced2))
 		{
 			// make splash  - add splash 
-
-			m_particles->AddSplash(&m_packet[m_usedPacket[uP]]);
+			/*
+			if (m_particles->IsSplashDone(&m_packet[m_usedPacket[uP]])) {
+				m_particles->AddSplash(&m_packet[m_usedPacket[uP]]);
+			}*/
 			// done splash 
 			int i1 = m_usedPacket[uP];
 			int firstghost = GetFreeGhostID();

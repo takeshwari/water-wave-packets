@@ -39,7 +39,7 @@ Render*								g_render;
 XMVECTOR							m_cursPos;
 int									m_displayedPackets = 0;
 LARGE_INTEGER						StartingTimeSim, EndingTimeSim, ElapsedMicrosecondsSim, Frequency;  // simulation timing-related 
-
+bool								hasSpawnedTestSplashSimulation;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -205,6 +205,7 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
 	//splash 
 	g_particles = new Particles(); 
 	g_packets->m_particles = g_particles;
+	g_particles->AddTestSplash();
 
 	return S_OK;
 }
