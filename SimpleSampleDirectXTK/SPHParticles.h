@@ -30,6 +30,10 @@ const static float VISC = 250.f; // viscosity constant
 const static float DT = 0.016f; // integration timestep
 
 const static float SPLASH_LIFETIME = 1.f;
+
+const static float surfaceTensionConstant = 32.f / (M_PI * std::pow(H, 9.f));
+const static float surfaceTensionOffset = -std::pow(H, 6.f) / 64.f;
+
 								 // smoothing kernels defined in Müller and their gradients
 const static float POLY6 = 315.f / (65.f*M_PI*pow(H, 9.f));
 const static float SPIKY_GRAD = -45.f / (M_PI*pow(H, 6.f));
