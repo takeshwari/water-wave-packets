@@ -218,12 +218,12 @@ void Particles::Integrate() {
 			//Check if the height of the ground at this particles' 2D position is greater than the particle's height above the water.
 			
 			Vector2f pos2D = p.x2D();
-			float groundHeight = GetBoundaryDist(pos2D) * -1.f;
+			float groundHeight = GetBoundaryDist(pos2D) * -3.f;
 			if (groundHeight > p.x.y()) {
 				//TODO figure out calculations for a reset velocity so that splash particles behave properly
 				p.v(0) *= -0.5f;
 				p.v(2) *= -0.5f;
-				if (p.v.y() < -1.f) {
+				if (p.v.y() < -3.f) {
 					p.v(1) *= -1.f;
 				}
 				Vector2f horiz = Vector2f(p.v.x(), p.v.z());
