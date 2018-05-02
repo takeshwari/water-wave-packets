@@ -437,7 +437,7 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	float calculatedDepth = clipSpacePos.z / clipSpacePos.w;
 	float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
 
-	/*for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
+	for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
 		float loopSample = depthColor;
 
 		// spatial domain
@@ -457,9 +457,9 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	}
 
 	Out.oColor.xyz = float3(sum, sum, sum);
-	Out.oColor.w = 1.0f;*/
+	Out.oColor.w = 1.0f;
 
-	Out.oColor = depthColor;
+	//Out.oColor = depthColor;
 
 	return Out;
 }
