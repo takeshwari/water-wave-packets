@@ -419,7 +419,7 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	PS_OUTPUT Out;
 
 	float blurScale = 1;
-	float blurDepthFalloff = 1;
+	float blurDepthFalloff = 3;
 	float filterRadius = 1;
 	float sum = 0;
 	float wsum = 0;
@@ -435,10 +435,28 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	// calculate depth
 	float4 clipSpacePos = In.pPos;
 	float calculatedDepth = clipSpacePos.z / clipSpacePos.w;
-	float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
+	//float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
 
+	// Shading from Water Packet Shader
+
+	float3 vDir = normalize(In.pPos - g_mWorld[3].xyz);	// view vector
+	float3 rDir = vDir - (2.0*dot(vDir, N))*N;	// reflection vector
+														// diffuse/reflective lighting
+	float3 color = float3(0.5, 0.6, 0.8);
+	float fac = 1.0 - (1.0 - abs(N.y) + abs(rDir.y))*(1.0 - abs(N.y) + abs(rDir.y));
+	Out.oColor.xyz = fac * fac*float3(0.5, 0.6, 0.8);
+	// add few specular glares
+	const float3 glareDir1 = normalize(float3(-1, -0.75, 1));
+	const float3 glareDir2 = normalize(float3(1, -0.75, -1));
+	const float3 glareDir3 = normalize(float3(1, -0.75, 1));
+	const float3 glareDir4 = normalize(float3(-1, -0.75, -1));
+	const float3 glareDir5 = normalize(float3(0, -1, 0));
+	Out.oColor.xyz += 100.0*pow(max(dot(-rDir, glareDir5), max(dot(-rDir, glareDir4), max(dot(-rDir, glareDir3), max(dot(-rDir, glareDir2), max(0.0, dot(-rDir, glareDir1)))))), 5000);
+
+	// Filtering
+	// Once per axis
 	for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
-		float loopSample = depthColor;
+		float loopSample = Out.oColor.x;
 
 		// spatial domain
 		float r = x * blurScale;
@@ -456,10 +474,66 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 		sum /= wsum;
 	}
 
+	Out.oColor.x = sum;
+
+	// Reinitialize every time
+	sum = 0;
+	wsum = 0;
+
+	// Once per axis
+	for (float y = -filterRadius; y <= filterRadius; y += 1.0f) {
+		float loopSample = Out.oColor.y;
+
+		// spatial domain
+		float r = y * blurScale;
+		float w = exp(-r * r);
+
+		// range domain
+		float r2 = (loopSample - calculatedDepth) * blurDepthFalloff;
+		float g = exp(-r2 * r2);
+
+		sum += loopSample * w * g;
+		wsum += w * g;
+	}
+
+	if (wsum > 0.0f) {
+		sum /= wsum;
+	}
+
+	Out.oColor.y = sum;
+
+	// Reinitialize every time
+	sum = 0;
+	wsum = 0;
+
+	// Once per axis
+	for (float z = -filterRadius; z <= filterRadius; z += 1.0f) {
+		float loopSample = Out.oColor.z;
+
+		// spatial domain
+		float r = z * blurScale;
+		float w = exp(-r * r);
+
+		// range domain
+		float r2 = (loopSample - calculatedDepth) * blurDepthFalloff;
+		float g = exp(-r2 * r2);
+
+		sum += loopSample * w * g;
+		wsum += w * g;
+	}
+
+	if (wsum > 0.0f) {
+		sum /= wsum;
+	}
+
+	Out.oColor.z = sum;
+	
+	/*
+	// Currently shows depth as color
 	Out.oColor.xyz = float3(sum, sum, sum);
 	Out.oColor.w = 1.0f;
 
-	//Out.oColor = depthColor;
+	Out.oColor = depthColor;*/
 
 	return Out;
 }
