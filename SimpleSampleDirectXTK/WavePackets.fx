@@ -428,12 +428,11 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	if (r2 > 1.0f) discard; // kill pixels outside circle
 	N.z = -sqrt(1.0f - r2);
 	// calculate depth
-	float4 pixelPos = float4(g_mWorld[3].xyz + N * 1.0f, 1.0f);
-	float4 clipSpacePos = In.pPos;
-	float calculatedDepth = clipSpacePos.w;
+	float4 clipSpacePos = float4(In.pPos.xyz + N * 1.0f, 1.0f);
+	float calculatedDepth = clipSpacePos.z / clipSpacePos.w;
 	float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
 
-	/*for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
+	for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
 		float loopSample = depthColor;
 
 		// spatial domain
@@ -453,9 +452,9 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	}
 
 	Out.oColor.xyz = float3(sum, sum, sum);
-	Out.oColor.w = 1.0f;*/
+	Out.oColor.w = 1.0f;
 
-	Out.oColor = depthColor;
+	//Out.oColor = depthColor;
 
 	return Out;
 }
