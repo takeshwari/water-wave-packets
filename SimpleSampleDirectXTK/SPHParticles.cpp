@@ -158,6 +158,8 @@ void Particles::ComputeForces(void) {
 		SplashContainer* splash = &splashEntry.second;
 		for (auto &pi : splash->particles)
 		{
+			//Vector3f forceCohesion(0.f, 0.f, 0.f);
+			//Vector3f forceCurvature(0.f, 0.f, 0.f);
 			Vector3f fpress(0.f, 0.f,0.f);
 			Vector3f fvisc(0.f, 0.f,0.f);
 			for (auto &pj : splash->particles)
@@ -174,10 +176,17 @@ void Particles::ComputeForces(void) {
 					fpress += -rij.normalized()*MASS*(pi.p + pj.p) / (2.f * pj.rho) * SPIKY_GRAD*pow(H - r, 2.f);
 					// compute viscosity force contribution
 					fvisc += VISC*MASS*(pj.v - pi.v) / pj.rho * VISC_LAP*(H - r);
+					
+					//float correctionFactor = 2.f * REST_DENS / (MASS*(pi.p + pj.p) / (2.f * pj.rho));
+					//forceCohesion += correctionFactor * (r / rij) * surfaceTensionOffset * - rij.normalized();
+					//forceCurvature += correctionFactor * (pi.p - pj.p) * -rij.normalized();
+					//forceCohesion *= -0.25f *MASS* surfaceTensionConstant;
+					//forceCurvature *= -0.25 * MASS;  
 				}
 			}
 			Vector3f fgrav = G * pi.rho;
 			pi.f = fpress + fvisc + fgrav;
+				//pi.f = fpress + fvisc + fgrav + forceCohesion + forceCurvature;
 		}
 	}
 }
