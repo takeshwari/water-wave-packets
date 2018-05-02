@@ -72,6 +72,7 @@ struct PS_INPUT_PARTICLE
 {
 	float4 pPos : SV_POSITION;
 	float2 tex0	: TEXCOORD0;
+	float3 Pos  : TEXTURE1; // nontransformed position
 };
 
 struct PS_INPUT_POS
@@ -305,18 +306,22 @@ void DisplaySplashFluidsGS(point GS_INPUT_PARTICLE p[1], inout TriangleStream<PS
 	PS_INPUT_PARTICLE pIn;
 	pIn.pPos = mul(v[0], g_mWorldViewProjection);
 	pIn.tex0 = float2(1.0f, 0.0f);
+	pIn.Pos = v[0];
 	triStream.Append(pIn);
 
 	pIn.pPos = mul(v[1], g_mWorldViewProjection);
 	pIn.tex0 = float2(1.0f, 1.0f);
+	pIn.Pos = v[1];
 	triStream.Append(pIn);
 
 	pIn.pPos = mul(v[2], g_mWorldViewProjection);
 	pIn.tex0 = float2(0.0f, 0.0f);
+	pIn.Pos = v[2];
 	triStream.Append(pIn);
 	
 	pIn.pPos = mul(v[3], g_mWorldViewProjection);
 	pIn.tex0 = float2(0.0f, 1.0f);
+	pIn.Pos = v[3];
 	triStream.Append(pIn);
 }
 
@@ -428,11 +433,11 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	if (r2 > 1.0f) discard; // kill pixels outside circle
 	N.z = -sqrt(1.0f - r2);
 	// calculate depth
-	float4 clipSpacePos = float4(In.pPos.xyz + N * 1.0f, 1.0f);
+	float4 clipSpacePos = In.pPos;
 	float calculatedDepth = clipSpacePos.z / clipSpacePos.w;
 	float depthColor = float4(calculatedDepth, calculatedDepth, calculatedDepth, 1.0f);
 
-	for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
+	/*for (float x = -filterRadius; x <= filterRadius; x += 1.0f) {
 		float loopSample = depthColor;
 
 		// spatial domain
@@ -452,9 +457,9 @@ PS_OUTPUT DisplaySplashFluidsPS(PS_INPUT_PARTICLE In)
 	}
 
 	Out.oColor.xyz = float3(sum, sum, sum);
-	Out.oColor.w = 1.0f;
+	Out.oColor.w = 1.0f;*/
 
-	//Out.oColor = depthColor;
+	Out.oColor = depthColor;
 
 	return Out;
 }
