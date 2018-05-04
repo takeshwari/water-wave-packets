@@ -396,7 +396,7 @@ PS_OUTPUT DisplayWaterPS(PS_INPUT_POS In)
 	float waterDepth = 1.0 + 0.9*pow(g_waterTerrainTex.SampleLevel(LinearSampler, In.Pos.xz / SCENE_EXTENT + float2(0.5, 0.5), 0).z, 4);
 	Out.oColor.xyz = waterDepth*Out.oColor.xyz;
 	Out.oColor.w = 1.0;
-	Out.oColor.xyz = float3(0.0, 0.0, 0.0);
+	//Out.oColor.xyz = float3(0.0, 0.0, 0.0);
 	return Out;
 }
 

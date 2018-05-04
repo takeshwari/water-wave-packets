@@ -78,8 +78,8 @@ void Particles::AddTestSplash() {
 	WAVE_PACKET testP = WAVE_PACKET();
 	SplashContainer splash = SplashContainer();
 	
-	float size = 1;
-	int resolution = 10;
+	float size = 0.5;
+	int resolution = 5;
 	Vector2f startPosition = Vector2f(0.f, 6.7f);
 	splash.radius = size;
 	splash.startPosition = startPosition + Vector2f((float)size / 2, (float)size / 2);
@@ -136,6 +136,9 @@ void Particles::AddSplash(WAVE_PACKET* packet) {
 	float s = (packet->speed1 + packet->speed2)/2.f;
 	Vector2f pVel = vF * s;
 
+	splash.startPosition = packet->midPos;
+	splash.MAX_HEIGHT = packet->ampOld;
+	splash.radius = 400.f * packet->ampOld;
 	for (int w = 0; w <= nC; w++) {
 		Vector2f frontEdgePoint = flCornerPt + vR * p * w;
 		for (int d = 0; d <= nR; d++) {
@@ -231,11 +234,11 @@ void Particles::Integrate() {
 		{
 			// forward Euler integration
 			Vector3f accel = p.f / p.rho;
-			float accelNorm = accel.norm();
+			/*float accelNorm = accel.norm();
 			if (accelNorm > MAX_ACCEL) {
 				accel *= MAX_ACCEL / accelNorm;
-			}
-			p.v += DT*accel/2.f;
+			}*/
+			p.v += DT*accel;
 			/*
 			float velNorm = p.v.norm();
 			if (velNorm > MAX_SPEED) {
@@ -306,9 +309,9 @@ void Particles::Integrate() {
 				p.v *= BOUND_DAMPING;
 				p.x(1) = BASE_HEIGHT;
 			}
-			else if (p.x.y() > MAX_HEIGHT) {
+			else if (p.x.y() > splash->MAX_HEIGHT) {
 				p.v *= BOUND_DAMPING;
-				p.x(1) = MAX_HEIGHT;
+				p.x(1) = splash->MAX_HEIGHT;
 			}
 			
 		}
