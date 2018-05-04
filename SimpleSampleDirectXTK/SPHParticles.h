@@ -9,7 +9,7 @@
 #include "WavePacket.h"
 using namespace std;
 using namespace Eigen;
-const static float BASE_HEIGHT = -1.f;
+const static float BASE_HEIGHT = 0.f;
 const static float START_HEIGHT = 0.f;
 const static float MAX_HEIGHT = 2.f;
 struct Particle {
@@ -26,12 +26,13 @@ const static float PARTICLE_WALL = 16.5f;
 const static Vector3f G(0.f,-9.8f ,0.f); // external (gravitational) forces
 const static float REST_DENS = 1000.f; // rest density
 const static float GAS_CONST = 2000.f; // const for equation of state
-const static float H = 1.f; // kernel radius
+const static float H = 2.f; // kernel radius
 const static float HSQ = H*H; // radius^2 for optimization
 const static float MASS = 1.f; // assume all particles have the same mass
 const static float VISC = 250.f; // viscosity constant
 const static float DT = 0.016f; // integration timestep
-
+const static float MAX_SPEED = 10.f;
+const static float MAX_ACCEL = 500.f;
 
 const static float SPLASH_LIFETIME = 10000.f;
 								 // smoothing kernels defined in Müller and their gradients

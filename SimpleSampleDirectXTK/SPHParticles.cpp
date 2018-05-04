@@ -230,7 +230,17 @@ void Particles::Integrate() {
 		for (auto &p : splash->particles)
 		{
 			// forward Euler integration
-			p.v += DT*p.f / p.rho;
+			Vector3f accel = p.f / p.rho;
+			float accelNorm = accel.norm();
+			if (accelNorm > MAX_ACCEL) {
+				accel *= MAX_ACCEL / accelNorm;
+			}
+			p.v += DT*accel/2.f;
+			/*
+			float velNorm = p.v.norm();
+			if (velNorm > MAX_SPEED) {
+				p.v *= MAX_SPEED / velNorm;
+			}*/
 			p.x += DT*p.v;
 
 			// enforce boundary conditions
@@ -258,12 +268,14 @@ void Particles::Integrate() {
 			//New boundary check for ground geometry
 			//Check if the height of the ground at this particles' 2D position is greater than the particle's height above the water.
 			
-			Vector2f pos2D = p.x2D();
+			
 
 			if (p.x.x() > PARTICLE_WALL) {
 				p.v *= BOUND_DAMPING;
 				p.x(0) = PARTICLE_WALL;
 			}
+
+			Vector2f pos2D = p.x2D();
 
 			Vector2f flatDiff = pos2D - splash->startPosition;
 			float norm = flatDiff.norm();
