@@ -4,15 +4,31 @@
 #include <cmath>
 #include <math.h>
 //This class keeps track of all SPH-simulated water particles in a scene and simulates them each update step
-void Particles::Update(int p_groundSizeY, int p_groundSizeX, float* p_distMap) {
+void Particles::Update(int p_groundSizeY, int p_groundSizeX, float* p_distMap, float* p_ground) {
 	m_groundSizeX = p_groundSizeX;
 	m_groundSizeY = p_groundSizeY;
+	m_ground = p_ground;
 	m_distMap = p_distMap;
+	MoveSplashes();
 	ComputeDensityPressure();
 	ComputeForces();
 	//Simulation disabled until red dot graphics are debugged
 	Integrate();
 	CheckForDoneSplashes();
+}
+
+inline float Particles::GetGroundVal(Vector2f &p)
+{
+	Vector2f pTex = Vector2f(p.x() / SCENE_EXTENT + 0.5f, p.y() / SCENE_EXTENT + 0.5f);		// convert from world space to texture space
+	float val1 = m_ground[(int)(max(0, min(m_groundSizeY - 1, (int) pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1, (int) pTex.x()*m_groundSizeX)))];
+	float val2 = m_ground[(int)(max(0, min(m_groundSizeY - 1, (int) pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1, 1 + (int) pTex.x()*m_groundSizeX)))];
+	float val3 = m_ground[(int)(max(0, min(m_groundSizeY - 1, 1 + (int) pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1, (int) pTex.x()*m_groundSizeX)))];
+	float val4 = m_ground[(int)(max(0, min(m_groundSizeY - 1, 1 + (int) pTex.y()*m_groundSizeY)))*m_groundSizeX + (int)(max(0, min(m_groundSizeX - 1, 1 + (int) pTex.x()*m_groundSizeX)))];
+	float xOffs = (pTex.x()*m_groundSizeX) - (int)(pTex.x()*m_groundSizeX);
+	float yOffs = (pTex.y()*m_groundSizeY) - (int)(pTex.y()*m_groundSizeY);
+	float valH1 = (1.0f - xOffs)*val1 + xOffs*val2;
+	float valH2 = (1.0f - xOffs)*val3 + xOffs*val4;
+	return((1.0f - yOffs)*valH1 + yOffs*valH2);
 }
 
 inline float Particles::GetBoundaryDist(Vector2f &p)
@@ -62,10 +78,10 @@ void Particles::AddTestSplash() {
 	WAVE_PACKET testP = WAVE_PACKET();
 	SplashContainer splash = SplashContainer();
 	
-	float size = 2;
+	float size = 1;
 	int resolution = 10;
-	Vector2f startPosition = Vector2f(10.f, 10.f);
-	splash.radius = size / 2;
+	Vector2f startPosition = Vector2f(0.f, 6.7f);
+	splash.radius = size;
 	splash.startPosition = startPosition + Vector2f((float)size / 2, (float)size / 2);
 	for (int x = 0; x < resolution; x++) {
 		for (int z = 0; z < resolution; z++) {
@@ -139,6 +155,16 @@ void Particles::AddSplash(WAVE_PACKET* packet) {
 			}
 	*/
 	splashes.insert(std::make_pair(packet, splash));
+}
+
+void Particles::MoveSplashes() {
+	for (auto &splashEntry : splashes) {
+		SplashContainer* splash = &splashEntry.second;
+		splash->startPosition += DT*Vector2f(2.f, 0.f);
+		if (splash->startPosition.x() > PARTICLE_WALL) {
+			splash->startPosition(0) = PARTICLE_WALL;
+		}
+	}
 }
 
 void Particles::RemoveSplash(WAVE_PACKET* packet) {
@@ -234,31 +260,43 @@ void Particles::Integrate() {
 			
 			Vector2f pos2D = p.x2D();
 
+			if (p.x.x() > PARTICLE_WALL) {
+				p.v *= BOUND_DAMPING;
+				p.x(0) = PARTICLE_WALL;
+			}
+
 			Vector2f flatDiff = pos2D - splash->startPosition;
 			float norm = flatDiff.norm();
 			if (norm > splash->radius) {
-				p.v *= -0.5f;
+				p.v *= BOUND_DAMPING;
 				Vector2f flatPos = splash->startPosition + (flatDiff / norm) * splash->radius;
-				p.x = Vector3f(flatPos.x(), 0.05f, flatPos.y());
+				p.x = Vector3f(flatPos.x(), p.x.y(), flatPos.y());
 			}
 
-			float groundHeight = GetBoundaryDist(pos2D) * -1.f;
-			if (groundHeight > p.x.y()) {
+			float groundHeight = GetGroundVal(pos2D);
+			/*if (groundHeight > p.x.y()) {
+				int test = 1 + 1;
+				//p.x(1) = 1000.f;
 				//TODO figure out calculations for a reset velocity so that splash particles behave properly
-				p.v(0) *= -0.5f;
-				p.v(2) *= -0.5f;
+				p.v(0) *= BOUND_DAMPING;
+				p.v(2) *= BOUND_DAMPING;
 				if (p.v.y() < -1.f) {
 					p.v(1) *= -1.f;
 				}
+				Vector3f currPos = Vector3f(p.x.x(), p.x.y(), p.x.z());
 				Vector2f horiz = Vector2f(p.v.x(), p.v.z());
 				p.v(1) += horiz.norm();
 				//What we want to do is set the particle's position to be at the ground point instead and multiply its velocity by damping
 				p.x(1) = groundHeight;
 			}
-			else if(p.x.y() < 0.05f)
+			else */if(p.x.y() < BASE_HEIGHT)
 			{
-				p.v(1) *= -0.5f;
-				p.x(1) = 0.05f;
+				p.v *= BOUND_DAMPING;
+				p.x(1) = BASE_HEIGHT;
+			}
+			else if (p.x.y() > MAX_HEIGHT) {
+				p.v *= BOUND_DAMPING;
+				p.x(1) = MAX_HEIGHT;
 			}
 			
 		}
