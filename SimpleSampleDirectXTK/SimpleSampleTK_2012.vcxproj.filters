@@ -24,12 +24,15 @@
     <ClInclude Include="Render.h" />
     <ClInclude Include="SPHParticles.h" />
     <ClInclude Include="WavePacket.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WavePacketViewer.cpp" />
     <ClCompile Include="Packets.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="SPHParticles.cpp" />
+    <ClCompile Include="Common.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="WavePackets.fx" />
