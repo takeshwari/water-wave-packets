@@ -401,6 +401,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="GlobalDefs.h" />
+    <ClInclude Include="Kernel.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="WavePacket.h" />
     <ClInclude Include="Packets.h" />
