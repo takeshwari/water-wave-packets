@@ -198,12 +198,16 @@ void Particles::ComputeDensityPressure(void) {
 }
 
 void Particles::ComputeForces(void) {
+	pbs::Kernel kernel = pbs::Kernel();
+	kernel.init(H);
 	for (auto &splashEntry : splashes) {
 		SplashContainer* splash = &splashEntry.second;
 		for (auto &pi : splash->particles)
 		{
 			Vector3f fpress(0.f, 0.f,0.f);
 			Vector3f fvisc(0.f, 0.f,0.f);
+			Vector3f fcoh(0.f, 0.f, 0.f);
+			Vector3f fcurv(0.f, 0.f, 0.f);
 			for (auto &pj : splash->particles)
 			{
 				if (&pi == &pj)
@@ -211,6 +215,8 @@ void Particles::ComputeForces(void) {
 
 				Vector3f rij = pj.x - pi.x;
 				float r = rij.norm();
+				float r2 = rij.squaredNorm();
+				float rn = std::sqrt(r2);
 
 				if (r < H)
 				{
@@ -219,9 +225,16 @@ void Particles::ComputeForces(void) {
 					// compute viscosity force contribution
 					fvisc += VISC*MASS*(pj.v - pi.v) / pj.rho * VISC_LAP*(H - r);
 				}
+				// Compute Normals
+				//Vector3f n_i, n_j;
+
+				// Surface Tension
+				float correctionFactor = 2.f * REST_DENS / (pi.rho + pj.rho);
+				fcoh += correctionFactor * (rij / rn) * kernel.surfaceTension(rn);
+				//fcurv += correctionFactor * (n_i - n_j );
 			}
 			Vector3f fgrav = G * pi.rho;
-			pi.f = fpress + fvisc + fgrav;
+			pi.f = fpress + fvisc + fgrav + fcoh;
 		}
 	}
 }

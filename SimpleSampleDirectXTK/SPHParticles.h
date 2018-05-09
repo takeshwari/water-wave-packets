@@ -7,6 +7,7 @@
 #include <cmath>
 #include <math.h>
 #include "WavePacket.h"
+#include "Kernel.h"
 using namespace std;
 using namespace Eigen;
 const static float BASE_HEIGHT = -0.5f;
