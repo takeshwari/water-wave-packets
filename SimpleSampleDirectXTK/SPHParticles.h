@@ -41,7 +41,7 @@ const static float POLY6 = 315.f / (65.f*M_PI*pow(H, 9.f));
 const static float SPIKY_GRAD = -45.f / (M_PI*pow(H, 6.f));
 const static float VISC_LAP = 45.f / (M_PI*pow(H, 6.f));
 
-std::vector<Vector3f> _fluidNormals;
+std::vector<Vector3f> fluidNormals;
 
 // simulation parameters
 const static float EPS = H; // boundary epsilon
