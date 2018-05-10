@@ -239,6 +239,18 @@ void Particles::ComputeForces(void) {
 	}
 }
 
+void SPH::updateNormals() {
+    parallelFor(_fluidPositions.size(), [this] (size_t i) {
+        Vector3f normal;
+        iterateNeighbours(_fluidGrid, _fluidPositions, _fluidPositions[i], [&] (size_t j, const Vector3f &r, float r2) {
+            normal += kernel.poly6Grad(r, r2) / _fluidDensities[j];
+        });
+        normal *= kernal.kernelRadius * kernal.particleMass * kernel.poly6GradConstant;
+        fluidNormals[i] = normal;
+    });
+}
+
+
 void Particles::Integrate() {
 	for (auto &splashEntry : splashes) {
 		SplashContainer* splash = &splashEntry.second;
