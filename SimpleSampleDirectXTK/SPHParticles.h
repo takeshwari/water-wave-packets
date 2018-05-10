@@ -36,10 +36,12 @@ const static float MAX_SPEED = 10.f;
 const static float MAX_ACCEL = 2000000.f;
 
 const static float SPLASH_LIFETIME = 0.3f;
-								 // smoothing kernels defined in Müller and their gradients
+								 // smoothing kernels defined in MÃ¼ller and their gradients
 const static float POLY6 = 315.f / (65.f*M_PI*pow(H, 9.f));
 const static float SPIKY_GRAD = -45.f / (M_PI*pow(H, 6.f));
 const static float VISC_LAP = 45.f / (M_PI*pow(H, 6.f));
+
+std::vector<Vector3f> _fluidNormals;
 
 // simulation parameters
 const static float EPS = H; // boundary epsilon
